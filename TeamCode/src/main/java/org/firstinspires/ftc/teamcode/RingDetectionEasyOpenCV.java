@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Core;
@@ -15,17 +14,16 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-@TeleOp(name = "Ring Detector")
-public class RingDetectionEasyOpenCV extends LinearOpMode {
+public class RingDetectionEasyOpenCV {
 
-    OpenCvCamera webcam;
+    private OpenCvCamera webcam;
+    private RingDetectionEasyOpenCV.CameraPipeline pipeline;
 
-    @Override
-    public void runOpMode() throws InterruptedException {
+    public void init(HardwareMap hardwareMap) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
-        CameraPipeline pipeline = new CameraPipeline(1, 4);
+        pipeline = new CameraPipeline(1, 4);
         webcam.setPipeline(pipeline);
 
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
@@ -34,27 +32,34 @@ public class RingDetectionEasyOpenCV extends LinearOpMode {
                 webcam.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
             }
         });
+    }
 
-        telemetry.addLine("Waiting for start");
-        telemetry.update();
+    public double getRingCount() {
+        return pipeline.getRingCount();
+    }
 
-        waitForStart();
+    public double getHueMean() {
+        return pipeline.getHueMean();
+    }
 
-        while (opModeIsActive()) {
-            double rings = pipeline.getRingCount();
+    public double getInputH() {
+        return pipeline.getInputH();
+    }
 
-            telemetry.addData("Rings: ", rings);
-            telemetry.addData("Hue Mean: ", pipeline.getHueMean());
-            telemetry.addData("Submat Hue", pipeline.getInputH());
-            telemetry.addData("Submat Saturation ", pipeline.getInputS());
-            telemetry.addData("Submat Value", pipeline.getInputV());
-            telemetry.update();
+    public Double getInputS() {
+        return pipeline.getInputS();
+    }
 
-            pipeline.reset();
+    public Double getInputV() {
+        return pipeline.getInputV();
+    }
 
-            sleep(100);
-        }
+    public void reset() {
+        pipeline.reset();
+    }
 
+    public void stop() {
+        webcam.closeCameraDevice();
     }
 
     class CameraPipeline extends OpenCvPipeline {
@@ -71,9 +76,6 @@ public class RingDetectionEasyOpenCV extends LinearOpMode {
         private double inputH = 0;
         private double inputS = 0;
         private double inputV = 0;
-
-        public CameraPipeline() {
-        }
 
         public CameraPipeline(double oneRingThreshold, double fourRingThreshold) {
             this.oneRingThreshold = oneRingThreshold;
