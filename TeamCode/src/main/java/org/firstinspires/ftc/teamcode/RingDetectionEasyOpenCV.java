@@ -15,7 +15,7 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-@TeleOp(name = "Easy Open Cv")
+@TeleOp(name = "Ring Detector")
 public class RingDetectionEasyOpenCV extends LinearOpMode {
 
     OpenCvCamera webcam;
@@ -45,17 +45,14 @@ public class RingDetectionEasyOpenCV extends LinearOpMode {
 
             telemetry.addData("Rings: ", rings);
             telemetry.addData("Hue Mean: ", pipeline.getHueMean());
-            telemetry.addData("Submat Mean", pipeline.getInputMean());
+            telemetry.addData("Submat Hue", pipeline.getInputH());
+            telemetry.addData("Submat Saturation ", pipeline.getInputS());
+            telemetry.addData("Submat Value", pipeline.getInputV());
             telemetry.update();
 
             pipeline.reset();
 
-            if (gamepad1.a) {
-                webcam.stopStreaming();
-            }
-
             sleep(100);
-
         }
 
     }
@@ -67,6 +64,13 @@ public class RingDetectionEasyOpenCV extends LinearOpMode {
         private int frames = 0;
         private Scalar inputMean;
         Rect target = new Rect(new Point(430, 0), new Point(480, 50));
+        private double BASE_GREY_HUE = 169.1;
+        private double BASE_GREY_SATURATION = 154;
+        private double BASE_GREY_VALUE = 134.6;
+
+        private double inputH = 0;
+        private double inputS = 0;
+        private double inputV = 0;
 
         public CameraPipeline() {
         }
@@ -85,9 +89,20 @@ public class RingDetectionEasyOpenCV extends LinearOpMode {
                 Mat submat = input.submat(target);
 
                 inputMean = Core.mean(submat);
+                inputH = inputMean.val[0];
+                inputS = inputMean.val[1];
+                inputV = inputMean.val[2];
             }
 
-            Core.inRange(mask, new Scalar(5, 50, 50), new Scalar(22, 255, 255), mask);
+            Scalar lowerHSV = new Scalar(
+                    5 + (BASE_GREY_HUE - inputH),
+                    50 + (BASE_GREY_SATURATION - inputS),
+                    50 + (BASE_GREY_VALUE - inputV));
+            Scalar upperHSV = new Scalar(
+                    22 + (BASE_GREY_HUE - inputH),
+                    255 + (BASE_GREY_SATURATION - inputS),
+                    255 + (BASE_GREY_VALUE - inputV));
+            Core.inRange(mask, lowerHSV, upperHSV, mask);
 
             hueMean = hueMean + processRing(mask);
             frames++;
@@ -113,17 +128,25 @@ public class RingDetectionEasyOpenCV extends LinearOpMode {
 
         }
 
-        public double getHueMean() {
-            return hueMean / frames;
-        }
-
         public void reset() {
             hueMean = 0;
             frames = 0;
         }
 
-        public Scalar getInputMean() {
-            return inputMean;
+        public double getHueMean() {
+            return hueMean / frames;
+        }
+
+        public double getInputH() {
+            return inputH;
+        }
+
+        public double getInputS() {
+            return inputS;
+        }
+
+        public double getInputV() {
+            return inputV;
         }
     }
 
