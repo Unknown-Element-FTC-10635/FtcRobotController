@@ -9,7 +9,7 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
 
         RingDetectionEasyOpenCV ringDetection = new RingDetectionEasyOpenCV();
-        ringDetection.init(hardwareMap);
+        ringDetection.init(hardwareMap, 2, 7);
 
         telemetry.addLine("Waiting for start");
         telemetry.update();
@@ -21,9 +21,6 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
 
             telemetry.addData("Rings: ", rings);
             telemetry.addData("Hue Mean: ", ringDetection.getHueMean());
-            telemetry.addData("Submat Hue", ringDetection.getInputH());
-            telemetry.addData("Submat Saturation ", ringDetection.getInputS());
-            telemetry.addData("Submat Value", ringDetection.getInputV());
             telemetry.update();
 
             ringDetection.reset();
