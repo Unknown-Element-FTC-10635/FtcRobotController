@@ -78,10 +78,12 @@ public class RingDetectionEasyOpenCV {
             if (webcam.getFrameCount() == 10) {
                 Mat submat = input.submat(new Rect(new Point(430, 0), new Point(480, 50)));
                 inputMean = Core.mean(submat);
+
                 lowerHSV = new Scalar(
                         5 + (BASE_GREY_HUE - inputMean.val[0]),
                         50 + (BASE_GREY_SATURATION - inputMean.val[1]),
                         50 + (BASE_GREY_VALUE - inputMean.val[2]));
+
                 upperHSV = new Scalar(
                         22 + (BASE_GREY_HUE - inputMean.val[0]),
                         255 + (BASE_GREY_SATURATION - inputMean.val[1]),
@@ -102,7 +104,7 @@ public class RingDetectionEasyOpenCV {
         }
 
         public int getRingCount() {
-            double val = hueMean / frames;
+            double val = getHueMean();
 
             if (val > fourRingThreshold) {
                 return 4;
@@ -111,7 +113,6 @@ public class RingDetectionEasyOpenCV {
             } else {
                 return 0;
             }
-
         }
 
         public void reset() {
@@ -123,5 +124,4 @@ public class RingDetectionEasyOpenCV {
             return hueMean / frames;
         }
     }
-
 }
