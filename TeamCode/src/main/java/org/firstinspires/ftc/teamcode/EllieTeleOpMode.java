@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-@TeleOp(name = "Driver control")
+@TeleOp(name = "ukdrive")
 public class EllieTeleOpMode extends OpMode {
 
     private DcMotor frontLeftDC;

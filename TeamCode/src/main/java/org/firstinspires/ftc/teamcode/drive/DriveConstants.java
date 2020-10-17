@@ -3,6 +3,10 @@ package org.firstinspires.ftc.teamcode.drive;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
+
+import org.firstinspires.ftc.teamcode.Motors.GoBILDA5202_435;
+
 
 /*
  * Constants shared between multiple drive types.
@@ -25,15 +29,20 @@ public class DriveConstants {
     public static final double MAX_RPM = 1;
 
     /*
-     * Set RUN_USING_ENCODER to true to enable built-in hub velocity control using drive encoders.
-     * Set this flag to false if drive encoders are not present and an alternative localization
-     * method is in use (e.g., tracking wheels).
-     *
-     * If using the built-in motor velocity PID, update
+     * The type of motor used on the drivetrain. While the SDK has definitions for many common
+     * motors, there may be slight gear ratio inaccuracies for planetary gearboxes and other
+     * discrepancies. Additional motor types can be defined via an interface with the
+     * @DeviceProperties and @MotorType annotations.
+     */
+    private static final MotorConfigurationType MOTOR_CONFIG =
+            MotorConfigurationType.getMotorType(GoBILDA5202_435.class);
+
+    /*
+     * Set the first flag appropriately. If using the built-in motor velocity PID, update
      * MOTOR_VELO_PID with the tuned coefficients from DriveVelocityPIDTuner.
      */
     public static final boolean RUN_USING_ENCODER = true;
-    public static PIDCoefficients MOTOR_VELO_PID = new PIDCoefficients(0, 0, 0);
+    public static final PIDCoefficients MOTOR_VELO_PID = null;
 
     /*
      * These are physical constants that can be determined from your robot (including the track
@@ -43,9 +52,9 @@ public class DriveConstants {
      * angular distances although most angular parameters are wrapped in Math.toRadians() for
      * convenience. Make sure to exclude any gear ratio included in MOTOR_CONFIG from GEAR_RATIO.
      */
-    public static double WHEEL_RADIUS = 2; // in
-    public static double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = 1; // in
+    public static final double WHEEL_RADIUS = 1.9685;
+    public static final double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
+    public static double TRACK_WIDTH = 15.29;
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using
@@ -53,7 +62,7 @@ public class DriveConstants {
      * motor encoders or have elected not to use them for velocity control, these values should be
      * empirically tuned.
      */
-    public static double kV = 1.0 / rpmToVelocity(MAX_RPM);
+    public static double kV = 1.0 / rpmToVelocity(getMaxRpm());
     public static double kA = 0;
     public static double kStatic = 0;
 
@@ -63,24 +72,34 @@ public class DriveConstants {
      * Runner is designed to enable faster autonomous motion, it is a good idea for testing to start
      * small and gradually increase them later after everything is working. The velocity and
      * acceleration values are required, and the jerk values are optional (setting a jerk of 0.0
-     * forces acceleration-limited profiling). All distance units are inches.
+     * forces acceleration-limited profiling).
      */
     public static DriveConstraints BASE_CONSTRAINTS = new DriveConstraints(
-            30.0, 30.0, 0.0,
-            Math.toRadians(180.0), Math.toRadians(180.0), 0.0
+            40.0, 30.0, 0.0,
+            2, 1, 0.0
     );
 
 
     public static double encoderTicksToInches(double ticks) {
-        return WHEEL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / TICKS_PER_REV;
+        return WHEEL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / MOTOR_CONFIG.getTicksPerRev();
     }
 
     public static double rpmToVelocity(double rpm) {
         return rpm * GEAR_RATIO * 2 * Math.PI * WHEEL_RADIUS / 60.0;
     }
 
+    public static double getMaxRpm() {
+        return MOTOR_CONFIG.getMaxRPM() *
+                (RUN_USING_ENCODER ? MOTOR_CONFIG.getAchieveableMaxRPMFraction() : 1.0);
+    }
+
+    public static double getTicksPerSec() {
+        // note: MotorConfigurationType#getAchieveableMaxTicksPerSecond() isn't quite what we want
+        return (MOTOR_CONFIG.getMaxRPM() * MOTOR_CONFIG.getTicksPerRev() / 60.0);
+    }
+
     public static double getMotorVelocityF() {
         // see https://docs.google.com/document/d/1tyWrXDfMidwYyP_5H4mZyVgaEswhOC35gvdmP-V-5hA/edit#heading=h.61g9ixenznbx
-        return 32767 * 60.0 / (MAX_RPM * TICKS_PER_REV);
+        return 32767 / getTicksPerSec();
     }
 }

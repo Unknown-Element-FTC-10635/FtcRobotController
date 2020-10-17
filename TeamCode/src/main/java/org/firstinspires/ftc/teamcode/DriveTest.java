@@ -5,7 +5,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.openftc.revextensions2.ExpansionHubMotor;
 
-@TeleOp
+@TeleOp(group = "ukdrive")
 public class DriveTest extends LinearOpMode {
 
     @Override

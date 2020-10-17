@@ -1,6 +1,5 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.drive.opmode;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
@@ -26,40 +25,28 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
  * is recommended that you use the FollowerPIDTuner opmode for further fine tuning.
  */
 @Config
-@Autonomous(group = "ukdrive")
-public class AutoTest extends LinearOpMode {
+@Autonomous(group = "drive")
+public class BackAndForth extends LinearOpMode {
 
     public static double DISTANCE = 50;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        FtcDashboard.start();
-
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-        //double drivePower = .1;
-        //drive.setMotorPowers(drivePower, drivePower, drivePower, drivePower);
-
         Trajectory trajectoryForward = drive.trajectoryBuilder(new Pose2d())
-                .forward(5)
+                .forward(DISTANCE)
                 .build();
 
-        Trajectory trajectoryBackwards = drive.trajectoryBuilder(trajectoryForward.end())
+        Trajectory trajectoryBackward = drive.trajectoryBuilder(trajectoryForward.end())
                 .back(DISTANCE)
                 .build();
 
         waitForStart();
 
-
-        //leftFront.setPower(10);
-        //leftRear.setPower(10);
-
         while (opModeIsActive() && !isStopRequested()) {
             drive.followTrajectory(trajectoryForward);
-            //drive.followTrajectory(trajectoryBackward);
-            drive.turn(Math.toRadians(180));
-            drive.followTrajectory(trajectoryForward);
-
+            drive.followTrajectory(trajectoryBackward);
         }
     }
 }
