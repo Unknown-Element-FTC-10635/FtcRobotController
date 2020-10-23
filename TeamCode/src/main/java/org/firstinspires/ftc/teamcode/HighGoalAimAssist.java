@@ -22,7 +22,7 @@ public class HighGoalAimAssist {
         Imgproc.blur(gray, gray, new Size(5, 5));
 
         Mat binary = new Mat(frame.rows(), frame.cols(), frame.type(), new Scalar(0));
-        Imgproc.threshold(gray, binary, 35, 255, Imgproc.THRESH_BINARY_INV);
+        Imgproc.threshold(gray, binary, 15, 255, Imgproc.THRESH_BINARY_INV);
 
         //Finding Contours
         List<MatOfPoint> contours = new ArrayList<>();
@@ -31,7 +31,7 @@ public class HighGoalAimAssist {
                 Imgproc.CHAIN_APPROX_SIMPLE);
 
         //Drawing the Contours
-        Scalar color = new Scalar(0, 255, 0);
+        Scalar color = new Scalar(0, 1, 0);
         Imgproc.drawContours(binary, contours, -1, color, 2, Imgproc.LINE_8,
                 hierarchey, 2, new Point());
 

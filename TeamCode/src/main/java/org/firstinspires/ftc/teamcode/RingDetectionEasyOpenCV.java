@@ -87,6 +87,7 @@ public class RingDetectionEasyOpenCV {
         private double inputS = 0;
         private double inputV = 0;
 
+
         public CameraPipeline(double oneRingThreshold, double fourRingThreshold) {
             this.oneRingThreshold = oneRingThreshold;
             this.fourRingThreshold = fourRingThreshold;
@@ -94,39 +95,57 @@ public class RingDetectionEasyOpenCV {
 
         @Override
         public Mat processFrame(Mat input) {
-            Mat mask = new Mat();
-            Imgproc.cvtColor(input, mask, Imgproc.COLOR_RGB2HSV);
+            Imgproc.cvtColor(input, input, Imgproc.COLOR_RGB2HSV);
 
-            if (webcam.getFrameCount() == 21) {
-                Mat submat = input.submat(new Rect(new Point(430, 0), new Point(480, 50)));
-                Scalar inputMean = Core.mean(submat);
-
-                inputH = inputMean.val[0];
-                inputS = inputMean.val[1];
-                inputV = inputMean.val[2];
-
-                lowerHSV = new Scalar(
-                        5 + (BASE_GREY_HUE - inputH),
-                        50 + (BASE_GREY_SATURATION - inputS),
-                        50 + (BASE_GREY_VALUE - inputV));
-
-                upperHSV = new Scalar(
-                        22 + (BASE_GREY_HUE - inputH),
-                        255 + (BASE_GREY_SATURATION - inputS),
-                        255 + (BASE_GREY_VALUE - inputV));
+            if (webcam.getFrameCount() >= 10) {
+                adjustBrightness(input);
+                //adjustForBrightness(input);
             }
 
-            Core.inRange(mask, lowerHSV, upperHSV, mask);
+            Core.inRange(input, lowerHSV, upperHSV, input);
 
-            hueMean = hueMean + processRing(mask);
+            hueMean = hueMean + processRing(input);
             frames++;
 
-            return mask;
+            return input;
         }
 
         private double processRing(Mat frame) {
             Scalar mean = Core.mean(frame);
             return mean.val[0];
+        }
+
+        private void adjustBrightness(Mat input) {
+            Mat submat = input.submat(new Rect(new Point(430, 0), new Point(480, 50)));
+            Scalar inputMean = Core.mean(submat);
+
+            double deltaV = BASE_GREY_VALUE - inputMean.val[2];
+
+            double alpha = 1.0;
+            input.convertTo(input, -1, alpha, deltaV);
+        }
+
+        private void adjustForBrightness(Mat frame) {
+            Mat submat = frame.submat(new Rect(new Point(430, 0), new Point(480, 50)));
+            Scalar inputMean = Core.mean(submat);
+
+            inputH = inputMean.val[0];
+            inputS = inputMean.val[1];
+            inputV = inputMean.val[2];
+
+            double deltaH = BASE_GREY_HUE - inputH;
+            double deltaS = BASE_GREY_SATURATION - inputS;
+            double deltaV= BASE_GREY_VALUE - inputV;
+
+            lowerHSV = new Scalar(
+                    5 + (deltaH),
+                    50 + (deltaS),
+                    50 + (deltaV));
+
+            upperHSV = new Scalar(
+                    22 + (deltaH),
+                    255,
+                    255);
         }
 
         public int getRingCount() {
