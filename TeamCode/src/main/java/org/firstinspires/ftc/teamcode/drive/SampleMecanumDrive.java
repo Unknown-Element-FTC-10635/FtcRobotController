@@ -92,6 +92,10 @@ public class SampleMecanumDrive extends MecanumDrive {
         super(kV, kA, kStatic, TRACK_WIDTH, TRACK_WIDTH, LATERAL_MULTIPLIER);
 
         dashboard = FtcDashboard.getInstance();
+        if (dashboard == null) {
+            FtcDashboard.start();
+            dashboard = FtcDashboard.getInstance();
+        }
         dashboard.setTelemetryTransmissionInterval(25);
 
         clock = NanoClock.system();
@@ -125,10 +129,11 @@ public class SampleMecanumDrive extends MecanumDrive {
         // upward (normal to the floor) using a command like the following:
         // BNO055IMUUtil.remapAxes(imu, AxesOrder.XYZ, AxesSigns.NPN);
 
-        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
-        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        leftFront = hardwareMap.get(DcMotorEx.class, "FrontLeft");
+        leftRear = hardwareMap.get(DcMotorEx.class, "BackLeft");
+        rightRear = hardwareMap.get(DcMotorEx.class, "BackRight");
+        rightFront = hardwareMap.get(DcMotorEx.class, "FrontRight");
+
 
         motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
 
