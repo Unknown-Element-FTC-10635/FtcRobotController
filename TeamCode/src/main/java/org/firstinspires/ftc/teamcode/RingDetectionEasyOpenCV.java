@@ -58,6 +58,10 @@ public class RingDetectionEasyOpenCV {
         return pipeline.getInputV();
     }
 
+    public double getDeltaV() {
+        return pipeline.getDeltaV();
+    }
+
     public void reset() {
         pipeline.reset();
     }
@@ -87,6 +91,7 @@ public class RingDetectionEasyOpenCV {
         private double inputS = 0;
         private double inputV = 0;
 
+        double deltaV = 0;
 
         public CameraPipeline(double oneRingThreshold, double fourRingThreshold) {
             this.oneRingThreshold = oneRingThreshold;
@@ -96,11 +101,6 @@ public class RingDetectionEasyOpenCV {
         @Override
         public Mat processFrame(Mat input) {
             Imgproc.cvtColor(input, input, Imgproc.COLOR_RGB2HSV);
-
-            if (webcam.getFrameCount() >= 10) {
-                adjustBrightness(input);
-                //adjustForBrightness(input);
-            }
 
             Core.inRange(input, lowerHSV, upperHSV, input);
 
@@ -119,10 +119,11 @@ public class RingDetectionEasyOpenCV {
             Mat submat = input.submat(new Rect(new Point(430, 0), new Point(480, 50)));
             Scalar inputMean = Core.mean(submat);
 
-            double deltaV = BASE_GREY_VALUE - inputMean.val[2];
+            inputV = inputMean.val[2];
+            deltaV = BASE_GREY_VALUE - inputV;
 
             double alpha = 1.0;
-            input.convertTo(input, -1, alpha, deltaV);
+            // input.convertTo(input, -1, alpha, deltaV);
         }
 
         private void adjustForBrightness(Mat frame) {
@@ -179,6 +180,10 @@ public class RingDetectionEasyOpenCV {
 
         public double getInputV() {
             return inputV;
+        }
+
+        public double getDeltaV() {
+            return deltaV;
         }
     }
 }

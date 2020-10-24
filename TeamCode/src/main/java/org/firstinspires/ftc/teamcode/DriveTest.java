@@ -27,10 +27,10 @@ public class DriveTest extends LinearOpMode {
             double right = gamepad1.left_stick_y;
             double spin = gamepad1.right_stick_x;
 
-            leftFront.setPower(forward - right - spin);
-            leftRear.setPower(forward - right + spin);
-            rightRear.setPower(forward + right - spin);
-            rightFront.setPower(forward + right + spin);
+            leftFront.setPower(forward + right + spin);
+            leftRear.setPower(forward + right - spin);
+            rightRear.setPower(forward - right + spin);
+            rightFront.setPower(forward - right - spin);
 
             telemetry.update();
         }
