@@ -1,8 +1,8 @@
 package org.firstinspires.ftc.teamcode.drive;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.roadrunner.control.PIDCoefficients;
 import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
 import org.firstinspires.ftc.teamcode.Motors.GoBILDA5202_435;
@@ -25,8 +25,8 @@ public class DriveConstants {
     /*
      * These are motor constants that should be listed online for your motors.
      */
-    public static final double TICKS_PER_REV = 1;
-    public static final double MAX_RPM = 1;
+    public static final double TICKS_PER_REV = 383.6;
+    public static final double MAX_RPM = 435;
 
     /*
      * The type of motor used on the drivetrain. While the SDK has definitions for many common
@@ -42,7 +42,9 @@ public class DriveConstants {
      * MOTOR_VELO_PID with the tuned coefficients from DriveVelocityPIDTuner.
      */
     public static final boolean RUN_USING_ENCODER = true;
-    public static final PIDCoefficients MOTOR_VELO_PID = null;
+    public static double KF = 14.243;
+    public static final PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(16, 0, 1, KF);
+    //public static final PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(0, 0, 0, getMotorVelocityF(MAX_RPM / 60 * TICKS_PER_REV));
 
     /*
      * These are physical constants that can be determined from your robot (including the track
@@ -93,13 +95,8 @@ public class DriveConstants {
                 (RUN_USING_ENCODER ? MOTOR_CONFIG.getAchieveableMaxRPMFraction() : 1.0);
     }
 
-    public static double getTicksPerSec() {
-        // note: MotorConfigurationType#getAchieveableMaxTicksPerSecond() isn't quite what we want
-        return (MOTOR_CONFIG.getMaxRPM() * MOTOR_CONFIG.getTicksPerRev() / 60.0);
-    }
-
-    public static double getMotorVelocityF() {
+    public static double getMotorVelocityF(double ticksPerSecond) {
         // see https://docs.google.com/document/d/1tyWrXDfMidwYyP_5H4mZyVgaEswhOC35gvdmP-V-5hA/edit#heading=h.61g9ixenznbx
-        return 32767 / getTicksPerSec();
+        return 32767 / ticksPerSecond;
     }
 }

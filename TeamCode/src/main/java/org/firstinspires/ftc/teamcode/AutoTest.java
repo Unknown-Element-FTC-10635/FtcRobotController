@@ -3,7 +3,10 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.profile.MotionState;
+import com.acmerobotics.roadrunner.trajectory.SimpleTrajectoryBuilder;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -37,10 +40,9 @@ public class AutoTest extends LinearOpMode {
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-        //double drivePower = .1;
-        //drive.setMotorPowers(drivePower, drivePower, drivePower, drivePower);
+        Pose2d poseEstimate = drive.getPoseEstimate();
 
-        Trajectory trajectoryForward = drive.trajectoryBuilder(new Pose2d())
+        Trajectory trajectoryForward = drive.trajectoryBuilder(poseEstimate)
                 .forward(5)
                 .build();
 
@@ -48,8 +50,13 @@ public class AutoTest extends LinearOpMode {
                 .back(DISTANCE)
                 .build();
 
-        waitForStart();
 
+        DriveConstraints constrain = new DriveConstraints(1, 1, 1, 1, 1, 1);
+        MotionState start = new MotionState(1, 1);
+
+        SimpleTrajectoryBuilder test = new SimpleTrajectoryBuilder(poseEstimate, constrain);
+
+        waitForStart();
 
         //leftFront.setPower(10);
         //leftRear.setPower(10);
@@ -57,8 +64,8 @@ public class AutoTest extends LinearOpMode {
         while (opModeIsActive() && !isStopRequested()) {
             drive.followTrajectory(trajectoryForward);
             //drive.followTrajectory(trajectoryBackward);
-            drive.turn(Math.toRadians(180));
-            drive.followTrajectory(trajectoryForward);
+            // drive.turn(Math.toRadians(180));
+            //drive.followTrajectory(trajectoryForward);
 
         }
     }

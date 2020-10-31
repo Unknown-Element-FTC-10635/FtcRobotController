@@ -14,8 +14,6 @@ import java.util.List;
 public class HighGoalAimAssist {
     public void createContours(String importFile, String exportFile) {
         Mat frame = Imgcodecs.imread(importFile);
-
-        //Converting the source image to binary
         Mat gray = new Mat(frame.rows(), frame.cols(), frame.type());
 
         Imgproc.cvtColor(frame, gray, Imgproc.COLOR_BGR2GRAY);
