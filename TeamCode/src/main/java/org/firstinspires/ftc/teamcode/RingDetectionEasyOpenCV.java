@@ -90,6 +90,7 @@ public class RingDetectionEasyOpenCV {
             } else {
                 return 0;
             }
+
         }
 
         public void reset() {

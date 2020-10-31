@@ -42,6 +42,9 @@ public class AutoTest extends LinearOpMode {
         Vector2d square3 = new Vector2d(60, -60);
 
         RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV();
+        ringCount.init(hardwareMap, 2, 4);
+
+        Thread.sleep(2000);
 
         int numberOfRings = ringCount.getRingCount();
 
