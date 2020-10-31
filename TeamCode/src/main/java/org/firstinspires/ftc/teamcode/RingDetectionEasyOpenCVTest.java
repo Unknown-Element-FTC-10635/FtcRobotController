@@ -22,8 +22,6 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
             telemetry.addData("Rings: ", rings);
             telemetry.addData("Hue Mean: ", ringDetection.getHueMean());
             telemetry.addData("Frames: ", ringDetection.getFrame());
-            telemetry.addData("Grey V: ", ringDetection.getInpusV());
-            telemetry.addData("V", ringDetection.getDeltaV());
             telemetry.update();
 
             ringDetection.reset();

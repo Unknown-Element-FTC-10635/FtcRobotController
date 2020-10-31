@@ -3,10 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.profile.MotionState;
-import com.acmerobotics.roadrunner.trajectory.SimpleTrajectoryBuilder;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -31,42 +29,42 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 @Config
 @Autonomous(group = "ukdrive")
 public class AutoTest extends LinearOpMode {
-
-    public static double DISTANCE = 50;
-
     @Override
     public void runOpMode() throws InterruptedException {
         FtcDashboard.start();
-
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
-        Pose2d poseEstimate = drive.getPoseEstimate();
+        Pose2d blueStart = new Pose2d(-60, 25, 0);
+        Pose2d estimatePosition = drive.getPoseEstimate();
 
-        Trajectory trajectoryForward = drive.trajectoryBuilder(poseEstimate)
-                .forward(5)
+        Vector2d square1 = new Vector2d(12, 60);
+        Vector2d square2 = new Vector2d(35, 35);
+        Vector2d square3 = new Vector2d(60, -60);
+
+        RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV();
+
+        int numberOfRings = ringCount.getRingCount();
+
+        Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
+                .splineTo(square1, 0)
                 .build();
-
-        Trajectory trajectoryBackwards = drive.trajectoryBuilder(trajectoryForward.end())
-                .back(DISTANCE)
+        Trajectory trajectoryToSquare2 = drive.trajectoryBuilder(blueStart)
+                .splineTo(square2, 0)
                 .build();
-
-
-        DriveConstraints constrain = new DriveConstraints(1, 1, 1, 1, 1, 1);
-        MotionState start = new MotionState(1, 1);
-
-        SimpleTrajectoryBuilder test = new SimpleTrajectoryBuilder(poseEstimate, constrain);
+        Trajectory trajectoryToSquare3 = drive.trajectoryBuilder(blueStart)
+                .splineTo(square3, 0)
+                .build();
 
         waitForStart();
 
-        //leftFront.setPower(10);
-        //leftRear.setPower(10);
-
-        while (opModeIsActive() && !isStopRequested()) {
-            drive.followTrajectory(trajectoryForward);
-            //drive.followTrajectory(trajectoryBackward);
-            // drive.turn(Math.toRadians(180));
-            //drive.followTrajectory(trajectoryForward);
-
+        if (numberOfRings == 4) {
+            drive.followTrajectory(trajectoryToSquare3);
+        } else if (numberOfRings == 1) {
+            drive.followTrajectory(trajectoryToSquare2);
+        } else {
+            drive.followTrajectory(trajectoryToSquare1);
         }
+
+
     }
 }

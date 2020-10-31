@@ -5,8 +5,6 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
-import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
@@ -34,7 +32,7 @@ public class RingDetectionEasyOpenCV {
         });
     }
 
-    public double getRingCount() {
+    public int getRingCount() {
         return pipeline.getRingCount();
     }
 
@@ -44,22 +42,6 @@ public class RingDetectionEasyOpenCV {
 
     public int getFrame() {
         return webcam.getFrameCount();
-    }
-
-    public double getInputH() {
-        return pipeline.getInputH();
-    }
-
-    public double getInputS() {
-        return pipeline.getInputS();
-    }
-
-    public double getInpusV() {
-        return pipeline.getInputV();
-    }
-
-    public double getDeltaV() {
-        return pipeline.getDeltaV();
     }
 
     public void reset() {
@@ -76,23 +58,6 @@ public class RingDetectionEasyOpenCV {
         private double hueMean = 0;
         private int frames = 0;
 
-//        private double BASE_GREY_HUE = 169.1;
-//        private double BASE_GREY_SATURATION = 154;
-//        private double BASE_GREY_VALUE = 134.6;
-
-        private double BASE_GREY_HUE = 144.67;
-        private double BASE_GREY_SATURATION = 115.52;
-        private double BASE_GREY_VALUE = 129.42;
-
-        private Scalar lowerHSV = new Scalar(5, 50, 50);
-        private Scalar upperHSV = new Scalar(22, 255, 255);
-
-        private double inputH = 0;
-        private double inputS = 0;
-        private double inputV = 0;
-
-        double deltaV = 0;
-
         public CameraPipeline(double oneRingThreshold, double fourRingThreshold) {
             this.oneRingThreshold = oneRingThreshold;
             this.fourRingThreshold = fourRingThreshold;
@@ -102,7 +67,7 @@ public class RingDetectionEasyOpenCV {
         public Mat processFrame(Mat input) {
             Imgproc.cvtColor(input, input, Imgproc.COLOR_RGB2HSV);
 
-            Core.inRange(input, lowerHSV, upperHSV, input);
+            Core.inRange(input, new Scalar(5, 50, 50), new Scalar(22, 255, 255), input);
 
             hueMean = hueMean + processRing(input);
             frames++;
@@ -113,40 +78,6 @@ public class RingDetectionEasyOpenCV {
         private double processRing(Mat frame) {
             Scalar mean = Core.mean(frame);
             return mean.val[0];
-        }
-
-        private void adjustBrightness(Mat input) {
-            Mat submat = input.submat(new Rect(new Point(430, 0), new Point(480, 50)));
-            Scalar inputMean = Core.mean(submat);
-
-            inputV = inputMean.val[2];
-            deltaV = BASE_GREY_VALUE - inputV;
-
-            double alpha = 1.0;
-            // input.convertTo(input, -1, alpha, deltaV);
-        }
-
-        private void adjustForBrightness(Mat frame) {
-            Mat submat = frame.submat(new Rect(new Point(430, 0), new Point(480, 50)));
-            Scalar inputMean = Core.mean(submat);
-
-            inputH = inputMean.val[0];
-            inputS = inputMean.val[1];
-            inputV = inputMean.val[2];
-
-            double deltaH = BASE_GREY_HUE - inputH;
-            double deltaS = BASE_GREY_SATURATION - inputS;
-            double deltaV= BASE_GREY_VALUE - inputV;
-
-            lowerHSV = new Scalar(
-                    5 + (deltaH),
-                    50 + (deltaS),
-                    50 + (deltaV));
-
-            upperHSV = new Scalar(
-                    22 + (deltaH),
-                    255,
-                    255);
         }
 
         public int getRingCount() {
@@ -168,22 +99,6 @@ public class RingDetectionEasyOpenCV {
 
         public double getHueMean() {
             return hueMean / frames;
-        }
-
-        public double getInputH() {
-            return inputH;
-        }
-
-        public double getInputS() {
-            return inputS;
-        }
-
-        public double getInputV() {
-            return inputV;
-        }
-
-        public double getDeltaV() {
-            return deltaV;
         }
     }
 }
