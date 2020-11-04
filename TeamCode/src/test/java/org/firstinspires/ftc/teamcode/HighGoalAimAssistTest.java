@@ -11,6 +11,6 @@ public class HighGoalAimAssistTest {
         String exportFile = "./build/ContrastContours.jpeg";
 
         HighGoalAimAssist aimAssist = new HighGoalAimAssist();
-        aimAssist.createContours(importFile, exportFile);
+        aimAssist.findHighGoal(importFile, exportFile);
     }
 }

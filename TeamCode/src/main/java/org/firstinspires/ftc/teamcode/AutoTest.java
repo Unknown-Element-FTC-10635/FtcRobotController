@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -32,42 +31,52 @@ public class AutoTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         FtcDashboard.start();
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        final SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
 
         Pose2d blueStart = new Pose2d(-60, 25, 0);
         Pose2d estimatePosition = drive.getPoseEstimate();
 
-        Vector2d square1 = new Vector2d(12, 60);
-        Vector2d square2 = new Vector2d(35, 35);
-        Vector2d square3 = new Vector2d(60, -60);
+        Pose2d square1 = new Pose2d(12, 60, 0);
+        Pose2d square2 = new Pose2d(35, 35, 0);
+        Pose2d square3 = new Pose2d(50, 60, 0);
 
-        RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV();
-        ringCount.init(hardwareMap, 2, 4);
+        RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV(hardwareMap, 4, 5);
 
-        Thread.sleep(2000);
-
-        int numberOfRings = ringCount.getRingCount();
-
-        Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
-                .splineTo(square1, 0)
+        final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
+                .splineToLinearHeading(square1, 90)
                 .build();
-        Trajectory trajectoryToSquare2 = drive.trajectoryBuilder(blueStart)
-                .splineTo(square2, 0)
+        final Trajectory trajectoryToSquare2 = drive.trajectoryBuilder(blueStart)
+                .splineToLinearHeading(square2, 90)
                 .build();
-        Trajectory trajectoryToSquare3 = drive.trajectoryBuilder(blueStart)
-                .splineTo(square3, 0)
+        final Trajectory trajectoryToSquare3 = drive.trajectoryBuilder(blueStart)
+                .splineToLinearHeading(square3, 90)
                 .build();
 
         waitForStart();
 
-        if (numberOfRings == 4) {
-            drive.followTrajectory(trajectoryToSquare3);
-        } else if (numberOfRings == 1) {
-            drive.followTrajectory(trajectoryToSquare2);
-        } else {
-            drive.followTrajectory(trajectoryToSquare1);
+        ringCount.start(new RingDetectionCallback() {
+            @Override
+            public void noRings() {
+                telemetry.addData("rings: ", 0);
+                drive.followTrajectory(trajectoryToSquare1);
+            }
+
+            @Override
+            public void oneRing() {
+                telemetry.addData("rings: ", 1);
+                drive.followTrajectory(trajectoryToSquare2);
+            }
+
+            @Override
+            public void fourRings() {
+                telemetry.addData("rings: ", 4);
+                drive.followTrajectory(trajectoryToSquare3);
+            }
+        });
+
+        while (opModeIsActive()) {
+            telemetry.addData("hue mean:", ringCount.getHueMean());
+            telemetry.update();
         }
-
-
     }
 }

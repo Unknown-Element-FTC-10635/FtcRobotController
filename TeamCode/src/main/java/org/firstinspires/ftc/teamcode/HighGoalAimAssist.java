@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.Point;
@@ -12,7 +13,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HighGoalAimAssist {
-    public void createContours(String importFile, String exportFile) {
+    public void findHighGoal(String importFile, String exportFile) {
+        Mat frame = createContours(importFile, exportFile);
+
+        frame.convertTo(frame, CvType.CV_16SC3);
+        int size = (int) (frame.total() * frame.channels());
+        short[] temp = new short[size];
+        frame.get(0, 0, temp);
+        for (int i = 0; i < size; i++)
+            temp[i] = (short) (temp[i] / 2);
+
+
+    }
+
+    private Mat createContours(String importFile, String exportFile) {
         Mat frame = Imgcodecs.imread(importFile);
         Mat gray = new Mat(frame.rows(), frame.cols(), frame.type());
 
@@ -34,5 +48,7 @@ public class HighGoalAimAssist {
                 hierarchey, 2, new Point());
 
         Imgcodecs.imwrite(exportFile, binary);
+
+        return binary;
     }
 }

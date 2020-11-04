@@ -17,11 +17,21 @@ public class RingDetectionEasyOpenCV {
     private OpenCvCamera webcam;
     private RingDetectionEasyOpenCV.CameraPipeline pipeline;
 
-    public void init(HardwareMap hardwareMap, double oneRingThreshold, double fourRingThreshold) {
+    private final HardwareMap hardwareMap;
+    private final double oneRingThreshold;
+    private final double fourRingThreshold;
+
+    public RingDetectionEasyOpenCV(HardwareMap hardwareMap, double oneRingThreshold, double fourRingThreshold) {
+        this.hardwareMap = hardwareMap;
+        this.oneRingThreshold = oneRingThreshold;
+        this.fourRingThreshold = fourRingThreshold;
+    }
+
+    public void start(RingDetectionCallback callback) {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
-        pipeline = new CameraPipeline(oneRingThreshold, fourRingThreshold);
+        pipeline = new CameraPipeline(oneRingThreshold, fourRingThreshold, callback);
         webcam.setPipeline(pipeline);
 
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
@@ -55,12 +65,14 @@ public class RingDetectionEasyOpenCV {
     class CameraPipeline extends OpenCvPipeline {
         private double oneRingThreshold;
         private double fourRingThreshold;
+        private RingDetectionCallback callback;
         private double hueMean = 0;
         private int frames = 0;
 
-        public CameraPipeline(double oneRingThreshold, double fourRingThreshold) {
+        public CameraPipeline(double oneRingThreshold, double fourRingThreshold, RingDetectionCallback callback) {
             this.oneRingThreshold = oneRingThreshold;
             this.fourRingThreshold = fourRingThreshold;
+            this.callback = callback;
         }
 
         @Override
@@ -71,6 +83,22 @@ public class RingDetectionEasyOpenCV {
 
             hueMean = hueMean + processRing(input);
             frames++;
+
+            if (frames == 30) {
+                switch (getRingCount()) {
+                    case 0:
+                        callback.noRings();
+                        break;
+                    case 1:
+                        callback.oneRing();
+                        break;
+                    case 4:
+                        callback.fourRings();
+                        break;
+                    default:
+                        throw new IllegalStateException("Unknown ring count");
+                }
+            }
 
             return input;
         }

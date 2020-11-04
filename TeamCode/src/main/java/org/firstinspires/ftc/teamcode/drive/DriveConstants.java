@@ -5,7 +5,7 @@ import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
-import org.firstinspires.ftc.teamcode.Motors.GoBILDA5202_435;
+import org.firstinspires.ftc.teamcode.Motors.GoBILDA5202_312;
 
 
 /*
@@ -25,8 +25,8 @@ public class DriveConstants {
     /*
      * These are motor constants that should be listed online for your motors.
      */
-    public static final double TICKS_PER_REV = 383.6;
-    public static final double MAX_RPM = 435;
+    public static final double TICKS_PER_REV = 537.6;
+    public static final double MAX_RPM = 312;
 
     /*
      * The type of motor used on the drivetrain. While the SDK has definitions for many common
@@ -35,14 +35,14 @@ public class DriveConstants {
      * @DeviceProperties and @MotorType annotations.
      */
     private static final MotorConfigurationType MOTOR_CONFIG =
-            MotorConfigurationType.getMotorType(GoBILDA5202_435.class);
+            MotorConfigurationType.getMotorType(GoBILDA5202_312.class);
 
     /*
      * Set the first flag appropriately. If using the built-in motor velocity PID, update
      * MOTOR_VELO_PID with the tuned coefficients from DriveVelocityPIDTuner.
      */
     public static final boolean RUN_USING_ENCODER = true;
-    public static double KF = 14.243;
+    public static double KF = 10;
     public static final PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(16, 0, 1, KF);
     //public static final PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(0, 0, 0, getMotorVelocityF(MAX_RPM / 60 * TICKS_PER_REV));
 
@@ -54,9 +54,10 @@ public class DriveConstants {
      * angular distances although most angular parameters are wrapped in Math.toRadians() for
      * convenience. Make sure to exclude any gear ratio included in MOTOR_CONFIG from GEAR_RATIO.
      */
-    public static final double WHEEL_RADIUS = 1.9685;
-    public static final double GEAR_RATIO = 1; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = 15.29;
+
+    public static final double WHEEL_RADIUS = 1.88976;
+    public static final double GEAR_RATIO = 1.09; // output (wheel) speed / input (motor) speed
+    public static double TRACK_WIDTH = 14.15;
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using

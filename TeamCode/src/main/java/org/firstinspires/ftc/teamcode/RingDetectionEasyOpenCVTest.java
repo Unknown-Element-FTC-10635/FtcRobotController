@@ -8,8 +8,7 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        RingDetectionEasyOpenCV ringDetection = new RingDetectionEasyOpenCV();
-        ringDetection.init(hardwareMap, 2, 4);
+        RingDetectionEasyOpenCV ringDetection = new RingDetectionEasyOpenCV(hardwareMap, 4, 5);
 
         telemetry.addLine("Waiting for start");
         telemetry.update();
