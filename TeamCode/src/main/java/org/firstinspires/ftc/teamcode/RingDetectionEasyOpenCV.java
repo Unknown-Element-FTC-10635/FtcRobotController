@@ -42,24 +42,12 @@ public class RingDetectionEasyOpenCV {
         });
     }
 
-    public int getRingCount() {
-        return pipeline.getRingCount();
-    }
-
     public double getHueMean() {
         return pipeline.getHueMean();
     }
 
     public int getFrame() {
-        return webcam.getFrameCount();
-    }
-
-    public void reset() {
-        pipeline.reset();
-    }
-
-    public void stop() {
-        webcam.closeCameraDevice();
+        return pipeline.getFrames();
     }
 
     class CameraPipeline extends OpenCvPipeline {
@@ -81,7 +69,10 @@ public class RingDetectionEasyOpenCV {
 
             Core.inRange(input, new Scalar(5, 50, 50), new Scalar(22, 255, 255), input);
 
-            hueMean = hueMean + processRing(input);
+            if(frames > 10) {
+                hueMean = hueMean + processRing(input);
+            }
+
             frames++;
 
             if (frames == 30) {
@@ -98,6 +89,8 @@ public class RingDetectionEasyOpenCV {
                     default:
                         throw new IllegalStateException("Unknown ring count");
                 }
+
+                webcam.stopStreaming();
             }
 
             return input;
@@ -128,6 +121,10 @@ public class RingDetectionEasyOpenCV {
 
         public double getHueMean() {
             return hueMean / frames;
+        }
+
+        public int getFrames() {
+            return frames;
         }
     }
 }
