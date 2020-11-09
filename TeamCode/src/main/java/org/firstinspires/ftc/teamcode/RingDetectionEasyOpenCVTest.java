@@ -18,24 +18,15 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
         telemetry.addLine("Starting webcam");
         ringDetection.start(new RingDetectionCallback() {
             @Override
-            public void oneRing() {
-                telemetry.addData("rings:", 1);
-            }
-
-            @Override
-            public void noRings() {
-                telemetry.addData("rings:", 0);
-            }
-
-            @Override
-            public void fourRings() {
-                telemetry.addData("rings:", 4);
+            public void ringsCounted(int numberOfRings) throws InterruptedException {
+                telemetry.addData("rings:", numberOfRings);
             }
         });
 
         while (opModeIsActive()) {
             telemetry.addData("Hue Mean: ", ringDetection.getHueMean());
             telemetry.addData("Frames: ", ringDetection.getFrame());
+            telemetry.addData("ID: ", ringDetection.deviceID());
             telemetry.update();
 
             //ringDetection.reset();

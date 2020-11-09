@@ -17,6 +17,8 @@ public class RingDetectionEasyOpenCV {
     private OpenCvCamera webcam;
     private RingDetectionEasyOpenCV.CameraPipeline pipeline;
 
+    int cameraMonitorViewId;
+
     private final HardwareMap hardwareMap;
     private final double oneRingThreshold;
     private final double fourRingThreshold;
@@ -28,7 +30,7 @@ public class RingDetectionEasyOpenCV {
     }
 
     public void start(RingDetectionCallback callback) {
-        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
         pipeline = new CameraPipeline(oneRingThreshold, fourRingThreshold, callback);
@@ -40,6 +42,10 @@ public class RingDetectionEasyOpenCV {
                 webcam.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
             }
         });
+    }
+
+    public double deviceID() {
+        return cameraMonitorViewId;
     }
 
     public double getHueMean() {
@@ -76,18 +82,10 @@ public class RingDetectionEasyOpenCV {
             frames++;
 
             if (frames == 30) {
-                switch (getRingCount()) {
-                    case 0:
-                        callback.noRings();
-                        break;
-                    case 1:
-                        callback.oneRing();
-                        break;
-                    case 4:
-                        callback.fourRings();
-                        break;
-                    default:
-                        throw new IllegalStateException("Unknown ring count");
+                try {
+                    callback.ringsCounted(getRingCount());
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
 
                 webcam.stopStreaming();

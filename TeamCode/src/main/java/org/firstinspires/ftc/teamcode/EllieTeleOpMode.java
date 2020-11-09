@@ -33,6 +33,11 @@ public class EllieTeleOpMode extends OpMode {
         frontRightDC.setDirection(DcMotor.Direction.REVERSE);
         backRightDC.setDirection(DcMotor.Direction.REVERSE);
 
+        frontLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         telemetry.addData("Init", "Complete");
         telemetry.update();
     }
@@ -47,10 +52,10 @@ public class EllieTeleOpMode extends OpMode {
         lift.setPower(gamepad1.right_trigger - gamepad1.left_trigger);
 
         if (gamepad1.dpad_left) {
-            armSwivel.setPosition(armSwivel.getPosition() - 0.001);
+            armSwivel.setPosition(armSwivel.getPosition() - 0.01);
         }
         if (gamepad1.dpad_right) {
-            armSwivel.setPosition(armSwivel.getPosition() + 0.001);
+            armSwivel.setPosition(armSwivel.getPosition() + 0.01);
         }
 
         if (gamepad1.dpad_down) {
@@ -64,6 +69,8 @@ public class EllieTeleOpMode extends OpMode {
         telemetry.addData("Back Left Motor Speed", backLeftDC.getPower());
         telemetry.addData("Front Right Motor Speed", frontRightDC.getPower());
         telemetry.addData("Back Right Motor Speed", backRightDC.getPower());
+        telemetry.addData("Arm swivel:", armSwivel.getPosition());
+        telemetry.addData("Grabber", grabber.getPosition());
         telemetry.update();
 
     }
