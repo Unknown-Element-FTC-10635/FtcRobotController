@@ -8,7 +8,7 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        RingDetectionEasyOpenCV ringDetection = new RingDetectionEasyOpenCV(hardwareMap, 3, 5);
+        RingDetectionEasyOpenCV ringDetection = new RingDetectionEasyOpenCV(hardwareMap, 4.5, 5);
 
         telemetry.addLine("Waiting for start");
         telemetry.update();
@@ -18,7 +18,7 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
         telemetry.addLine("Starting webcam");
         ringDetection.start(new RingDetectionCallback() {
             @Override
-            public void ringsCounted(int numberOfRings) throws InterruptedException {
+            public void ringsCounted(int numberOfRings) {
                 telemetry.addData("rings:", numberOfRings);
             }
         });

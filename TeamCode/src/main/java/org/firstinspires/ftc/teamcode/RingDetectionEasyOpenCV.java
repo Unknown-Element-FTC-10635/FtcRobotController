@@ -82,11 +82,7 @@ public class RingDetectionEasyOpenCV {
             frames++;
 
             if (frames == 30) {
-                try {
-                    callback.ringsCounted(getRingCount());
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                callback.ringsCounted(getRingCount());
 
                 webcam.stopStreaming();
             }
