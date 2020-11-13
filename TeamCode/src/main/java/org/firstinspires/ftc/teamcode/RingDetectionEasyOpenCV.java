@@ -6,6 +6,7 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -72,6 +73,7 @@ public class RingDetectionEasyOpenCV {
         @Override
         public Mat processFrame(Mat input) {
             Imgproc.cvtColor(input, input, Imgproc.COLOR_RGB2HSV);
+            Imgproc.GaussianBlur(input, input, new Size(5, 5), 0);
 
             Core.inRange(input, new Scalar(5, 50, 50), new Scalar(22, 255, 255), input);
 
