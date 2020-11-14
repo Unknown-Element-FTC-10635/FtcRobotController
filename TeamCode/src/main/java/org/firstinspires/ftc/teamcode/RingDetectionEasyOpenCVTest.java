@@ -8,33 +8,34 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
 
-        RingDetectionEasyOpenCV ringDetection = new RingDetectionEasyOpenCV(hardwareMap, 4.5, 5);
-
-        telemetry.addLine("Waiting for start");
-        telemetry.update();
-
-        waitForStart();
-
-        telemetry.addLine("Starting webcam");
-        ringDetection.start(new RingDetectionCallback() {
+        RingDetectionCallback callback = new RingDetectionCallback() {
             @Override
             public void ringsCounted(int numberOfRings) {
                 telemetry.addData("rings:", numberOfRings);
             }
-        });
+        };
+
+        RingDetectionEasyOpenCV ringDetection = new RingDetectionEasyOpenCV(hardwareMap, telemetry, callback);
+
+        telemetry.addLine("Waiting for start");
+        telemetry.update();
+
+        ringDetection.start();
+
+        waitForStart();
+
+        ringDetection.run();
+
+        telemetry.addLine("Starting webcam");
 
         while (opModeIsActive()) {
-            telemetry.addData("Hue Mean: ", ringDetection.getHueMean());
-            telemetry.addData("Frames: ", ringDetection.getFrame());
-            telemetry.addData("ID: ", ringDetection.deviceID());
+            //telemetry.addData("Hue Mean: ", ringDetection.getHueMean());
             telemetry.update();
-
-            //ringDetection.reset();
 
             sleep(100);
         }
 
-        //ringDetection.stop();
+        ringDetection.stop();
 
     }
 }

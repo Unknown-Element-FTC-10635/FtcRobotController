@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -14,6 +15,8 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 public class RingDetectionEasyOpenCV {
+    private final double ONE_RING_THRESHOLD = 5.0;
+    private final double FOUR_RING_THRESHOLD = 7.0;
 
     private OpenCvCamera webcam;
     private RingDetectionEasyOpenCV.CameraPipeline pipeline;
@@ -21,20 +24,20 @@ public class RingDetectionEasyOpenCV {
     int cameraMonitorViewId;
 
     private final HardwareMap hardwareMap;
-    private final double oneRingThreshold;
-    private final double fourRingThreshold;
+    private final Telemetry telemetry;
+    private final RingDetectionCallback callback;
 
-    public RingDetectionEasyOpenCV(HardwareMap hardwareMap, double oneRingThreshold, double fourRingThreshold) {
+    public RingDetectionEasyOpenCV(HardwareMap hardwareMap, Telemetry telemetry, RingDetectionCallback callback) {
         this.hardwareMap = hardwareMap;
-        this.oneRingThreshold = oneRingThreshold;
-        this.fourRingThreshold = fourRingThreshold;
+        this.telemetry = telemetry;
+        this.callback = callback;
     }
 
-    public void start(RingDetectionCallback callback) {
+    public void start() {
         cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
-        pipeline = new CameraPipeline(oneRingThreshold, fourRingThreshold, callback);
+        pipeline = new CameraPipeline();
         webcam.setPipeline(pipeline);
 
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
@@ -45,8 +48,16 @@ public class RingDetectionEasyOpenCV {
         });
     }
 
-    public double deviceID() {
-        return cameraMonitorViewId;
+    public void run() {
+        while (pipeline.getFrames() < 60) {
+            // Do literally nothing
+        }
+        callback.ringsCounted(pipeline.getRingCount());
+        //webcam.stopStreaming();
+    }
+
+    public int getRingCount() {
+        return pipeline.getRingCount();
     }
 
     public double getHueMean() {
@@ -57,18 +68,14 @@ public class RingDetectionEasyOpenCV {
         return pipeline.getFrames();
     }
 
+    public void stop() {
+        webcam.stopStreaming();
+        //webcam.closeCameraDevice();
+    }
+
     class CameraPipeline extends OpenCvPipeline {
-        private double oneRingThreshold;
-        private double fourRingThreshold;
-        private RingDetectionCallback callback;
         private double hueMean = 0;
         private int frames = 0;
-
-        public CameraPipeline(double oneRingThreshold, double fourRingThreshold, RingDetectionCallback callback) {
-            this.oneRingThreshold = oneRingThreshold;
-            this.fourRingThreshold = fourRingThreshold;
-            this.callback = callback;
-        }
 
         @Override
         public Mat processFrame(Mat input) {
@@ -77,17 +84,9 @@ public class RingDetectionEasyOpenCV {
 
             Core.inRange(input, new Scalar(5, 50, 50), new Scalar(22, 255, 255), input);
 
-            if(frames > 10) {
-                hueMean = hueMean + processRing(input);
-            }
+            hueMean = processRing(input);
 
             frames++;
-
-            if (frames == 30) {
-                callback.ringsCounted(getRingCount());
-
-                webcam.stopStreaming();
-            }
 
             return input;
         }
@@ -99,24 +98,22 @@ public class RingDetectionEasyOpenCV {
 
         public int getRingCount() {
             double val = getHueMean();
-
-            if (val > fourRingThreshold) {
+            telemetry.addData("hueMean: ", val);
+            if (val > FOUR_RING_THRESHOLD) {
+                telemetry.addData("rings: ", 4);
                 return 4;
-            } else if (val > oneRingThreshold) {
+            } else if (val > ONE_RING_THRESHOLD) {
+                telemetry.addData("rings: ", 1);
                 return 1;
             } else {
+                telemetry.addData("rings: ", 0);
                 return 0;
             }
 
         }
 
-        public void reset() {
-            hueMean = 0;
-            frames = 0;
-        }
-
         public double getHueMean() {
-            return hueMean / frames;
+            return hueMean;
         }
 
         public int getFrames() {

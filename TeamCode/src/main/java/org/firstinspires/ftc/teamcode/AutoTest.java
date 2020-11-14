@@ -37,7 +37,6 @@ public class AutoTest extends LinearOpMode {
         final Vector2d square2 = new Vector2d(20, 38);
         final Vector2d square3 = new Vector2d(47, 65);
 
-        final RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV(hardwareMap, 6.0, 8.0);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
                 .splineToConstantHeading(square1, Math.toRadians(90))
@@ -51,23 +50,12 @@ public class AutoTest extends LinearOpMode {
                 .splineToConstantHeading(square3, Math.toRadians(90))
                 .build();
 
-        drive.setPoseEstimate(blueStart);
-
-        telemetry.addLine("Waiting for start");
-        telemetry.update();
-
-        waitForStart();
-
-        ringCount.start(new RingDetectionCallback() {
+        RingDetectionCallback callback = new RingDetectionCallback() {
 
             @Override
             public void ringsCounted(int numberOfRings) {
                 telemetry.addData("rings: ", numberOfRings);
-                telemetry.addData("Hue mean:", ringCount.getHueMean());
-                telemetry.update();
-
-                // TODO: fix ring detection, currently disabled
-                numberOfRings = 1;
+                //telemetry.update();
 
                 switch (numberOfRings) {
                     case 0:
@@ -86,16 +74,31 @@ public class AutoTest extends LinearOpMode {
                         break;
                 }
             }
-        });
+        };
+
+        final RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV(hardwareMap, telemetry, callback);
+
+        drive.setPoseEstimate(blueStart);
+
+        telemetry.addLine("Waiting for start");
+        telemetry.update();
+
+        ringCount.start();
+
+        waitForStart();
+
+        ringCount.run();
 
         while (opModeIsActive() && !isStopRequested()) {
+            //telemetry.addData("Hue mean:", ringCount.getHueMean());
+            //telemetry.update();
             sleep(100);
         }
+
     }
 
     private void afterRingCount(Pose2d destination, Pose2d currentSquare) {
         Vector2d blueSecondWobblePosition = new Vector2d(-50, 50);
-        Vector2d reverseFromPosition = new Vector2d(-10, 24);
         Vector2d navToSquare1 = new Vector2d(-20, 60);
 
         Trajectory backUp = drive.trajectoryBuilder(currentSquare, true)
