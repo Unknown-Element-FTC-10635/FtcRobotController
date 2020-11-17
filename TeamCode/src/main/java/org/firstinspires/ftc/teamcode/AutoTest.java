@@ -50,33 +50,7 @@ public class AutoTest extends LinearOpMode {
                 .splineToConstantHeading(square3, Math.toRadians(90))
                 .build();
 
-        RingDetectionCallback callback = new RingDetectionCallback() {
-
-            @Override
-            public void ringsCounted(int numberOfRings) {
-                telemetry.addData("rings: ", numberOfRings);
-                //telemetry.update();
-
-                switch (numberOfRings) {
-                    case 0:
-                        drive.followTrajectory(trajectoryToSquare1);
-                        afterRingCount(new Pose2d(10, 45, 0), vectorToPose(square1, 0));
-                        break;
-
-                    case 1:
-                        drive.followTrajectory(trajectoryToSquare2);
-                        afterRingCount(new Pose2d(35, 17, 0), vectorToPose(square2, 0));
-                        break;
-
-                    case 4:
-                        drive.followTrajectory(trajectoryToSquare3);
-                        afterRingCount(new Pose2d(60, 40, 0), vectorToPose(square3, 0));
-                        break;
-                }
-            }
-        };
-
-        final RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV(hardwareMap, telemetry, callback);
+        final RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV(hardwareMap, telemetry);
 
         drive.setPoseEstimate(blueStart);
 
@@ -87,18 +61,38 @@ public class AutoTest extends LinearOpMode {
 
         waitForStart();
 
-        ringCount.run();
-
-        while (opModeIsActive() && !isStopRequested()) {
-            //telemetry.addData("Hue mean:", ringCount.getHueMean());
-            //telemetry.update();
+        while (opModeIsActive() && ringCount.getFrameCount() < 60) {
             sleep(100);
         }
+
+        int numberOfRings = ringCount.getRingCount();
+
+        telemetry.addData("rings: ", numberOfRings);
+        telemetry.update();
+
+        switch (numberOfRings) {
+            case 0:
+                drive.followTrajectory(trajectoryToSquare1);
+                afterRingCount(new Pose2d(10, 45, 0), vectorToPose(square1, 0));
+                break;
+
+            case 1:
+                drive.followTrajectory(trajectoryToSquare2);
+                afterRingCount(new Pose2d(35, 17, 0), vectorToPose(square2, 0));
+                break;
+
+            case 4:
+                drive.followTrajectory(trajectoryToSquare3);
+                afterRingCount(new Pose2d(60, 40, 0), vectorToPose(square3, 0));
+                break;
+        }
+
+        ringCount.stop();
 
     }
 
     private void afterRingCount(Pose2d destination, Pose2d currentSquare) {
-        Vector2d blueSecondWobblePosition = new Vector2d(-50, 50);
+        Vector2d blueSecondWobblePosition = new Vector2d(-45, 50);
         Vector2d navToSquare1 = new Vector2d(-20, 60);
 
         Trajectory backUp = drive.trajectoryBuilder(currentSquare, true)

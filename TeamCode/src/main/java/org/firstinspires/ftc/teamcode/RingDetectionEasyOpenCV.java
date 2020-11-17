@@ -15,26 +15,22 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 public class RingDetectionEasyOpenCV {
-    private final double ONE_RING_THRESHOLD = 5.0;
-    private final double FOUR_RING_THRESHOLD = 7.0;
+    private final double ONE_RING_THRESHOLD = 2.0;
+    private final double FOUR_RING_THRESHOLD = 5.0;
 
     private OpenCvCamera webcam;
     private RingDetectionEasyOpenCV.CameraPipeline pipeline;
 
-    int cameraMonitorViewId;
-
     private final HardwareMap hardwareMap;
     private final Telemetry telemetry;
-    private final RingDetectionCallback callback;
 
-    public RingDetectionEasyOpenCV(HardwareMap hardwareMap, Telemetry telemetry, RingDetectionCallback callback) {
+    public RingDetectionEasyOpenCV(HardwareMap hardwareMap, Telemetry telemetry) {
         this.hardwareMap = hardwareMap;
         this.telemetry = telemetry;
-        this.callback = callback;
     }
 
     public void start() {
-        cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         webcam = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
 
         pipeline = new CameraPipeline();
@@ -43,34 +39,23 @@ public class RingDetectionEasyOpenCV {
         webcam.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
             @Override
             public void onOpened() {
-                webcam.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
+                telemetry.addLine("Starting camera stream");
+                telemetry.update();
+                webcam.startStreaming(640, 480, OpenCvCameraRotation.UPRIGHT);
             }
         });
     }
 
-    public void run() {
-        while (pipeline.getFrames() < 60) {
-            // Do literally nothing
-        }
-        callback.ringsCounted(pipeline.getRingCount());
-        //webcam.stopStreaming();
+    public int getFrameCount() {
+        return pipeline.getFrames();
     }
 
     public int getRingCount() {
         return pipeline.getRingCount();
     }
 
-    public double getHueMean() {
-        return pipeline.getHueMean();
-    }
-
-    public int getFrame() {
-        return pipeline.getFrames();
-    }
-
     public void stop() {
         webcam.stopStreaming();
-        //webcam.closeCameraDevice();
     }
 
     class CameraPipeline extends OpenCvPipeline {
