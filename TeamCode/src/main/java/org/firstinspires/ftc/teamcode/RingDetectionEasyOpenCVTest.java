@@ -24,6 +24,9 @@ public class RingDetectionEasyOpenCVTest extends LinearOpMode {
         telemetry.addData("rings:", ringDetection.getRingCount());
         telemetry.update();
 
+        while (opModeIsActive()) {
+        }
+
         ringDetection.stop();
 
     }

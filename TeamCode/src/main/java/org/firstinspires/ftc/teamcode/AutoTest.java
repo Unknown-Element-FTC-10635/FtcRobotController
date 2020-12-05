@@ -34,8 +34,8 @@ public class AutoTest extends LinearOpMode {
         Vector2d avoidRingsPoint = new Vector2d(-10, 24);
 
         final Vector2d square1 = new Vector2d(5, 62);
-        final Vector2d square2 = new Vector2d(30, 30);
-        final Vector2d square3 = new Vector2d(47, 65);
+        final Vector2d square2 = new Vector2d(25, 32);
+        final Vector2d square3 = new Vector2d(45, 65);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
                 .splineToConstantHeading(square1, Math.toRadians(90))
@@ -79,12 +79,12 @@ public class AutoTest extends LinearOpMode {
 
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
-                afterRingCount(new Pose2d(30, 42, 0), vectorToPose(square2, 0));
+                afterRingCount(new Pose2d(25, 41, 0), vectorToPose(square2, 0));
                 break;
 
             case 4:
                 drive.followTrajectory(trajectoryToSquare3);
-                afterRingCount(new Pose2d(60, 40, 0), vectorToPose(square3, 0));
+                afterRingCount(vectorToPose(square3, 0), vectorToPose(square3, 0));
                 break;
         }
 
@@ -93,7 +93,7 @@ public class AutoTest extends LinearOpMode {
     }
 
     private void afterRingCount(Pose2d destination, Pose2d currentSquare) {
-        Vector2d blueSecondWobblePosition = new Vector2d(-45, 50);
+        Vector2d blueSecondWobblePosition = new Vector2d(-46, 50);
         Vector2d navToSquare1 = new Vector2d(-16, 60);
 
         Trajectory backUp = drive.trajectoryBuilder(currentSquare, true)
@@ -109,13 +109,13 @@ public class AutoTest extends LinearOpMode {
                 .lineToLinearHeading(vectorToPose(navToSquare1, 0))
                 .build();
         Trajectory returnToSquare = drive.trajectoryBuilder(rotateBack.end())
-                .splineToLinearHeading(destination, 90)
+                .splineToLinearHeading(destination, 0)
                 .build();
-        Trajectory reverseFive = drive.trajectoryBuilder(returnToSquare.end())
-                .back(5)
+        Trajectory reverseFromWobbles = drive.trajectoryBuilder(returnToSquare.end())
+                .back(14)
                 .build();
-        Trajectory parkOnLine = drive.trajectoryBuilder(reverseFive.end())
-                .strafeTo(new Vector2d(-4, 55))
+        Trajectory parkOnLine = drive.trajectoryBuilder(reverseFromWobbles.end())
+                .strafeTo(new Vector2d(10, 20))
                 .build();
 
         armSwivel.setPosition(0.8);
@@ -140,6 +140,9 @@ public class AutoTest extends LinearOpMode {
         drive.followTrajectory(returnToSquare);
         grabber.setPosition(1);
 
+        sleep(500);
+
+        drive.followTrajectory(reverseFromWobbles);
         drive.followTrajectory(parkOnLine);
     }
 

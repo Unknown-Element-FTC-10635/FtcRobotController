@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 @TeleOp(name = "ukdrive")
 public class EllieTeleOpMode extends OpMode {
@@ -19,10 +20,12 @@ public class EllieTeleOpMode extends OpMode {
     private Servo grabber;
     private Servo ringGrabber;
 
-    private boolean slowMode;
     private boolean ringGrabberOpen;
 
     private double wheelMultiplier;
+
+    private ElapsedTime r3Timer = new ElapsedTime();
+    private ElapsedTime aTimer = new ElapsedTime();
 
     private final int MAX_LIFT_POSITION = 1000;
     private final int MIN_LIFT_POSITION = 0;
@@ -55,7 +58,6 @@ public class EllieTeleOpMode extends OpMode {
         lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        slowMode = false;
         ringGrabberOpen = false;
 
         wheelMultiplier = 1;
@@ -66,19 +68,14 @@ public class EllieTeleOpMode extends OpMode {
 
     @Override
     public void loop() {
-        if (gamepad1.right_stick_button) {
+        if (gamepad1.right_stick_button && r3Timer.milliseconds() > 250) {
             if (wheelMultiplier == 1) {
                 wheelMultiplier = 0.25;
             } else {
                 wheelMultiplier = 1;
             }
 
-            try {
-                Thread.sleep(250);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
+            r3Timer.reset();
         }
 
         frontLeftDC.setPower(((gamepad1.left_stick_y - gamepad1.left_stick_x) - gamepad1.right_stick_x) * wheelMultiplier);
@@ -88,19 +85,31 @@ public class EllieTeleOpMode extends OpMode {
 
         if (gamepad1.right_bumper) {
             arm.setPower(0.5);
-       /*     if ((lift.getCurrentPosition() > MAX_LIFT_POSITION)) {
-                lift.setPower(-0.3);
-                lift.setTargetPosition(MAX_LIFT_POSITION);
-            } */
         } else if (gamepad1.left_bumper) {
             arm.setPower(-0.5);
         } else {
             arm.setPower(0);
         }
 
-        lift.setPower((gamepad1.right_trigger - gamepad1.left_trigger) / 2);
+        if (gamepad1.right_trigger > 0.0) {
+            lift.setPower(gamepad1.right_trigger);
 
-        if (gamepad1.a) {
+            if ((lift.getCurrentPosition() > MAX_LIFT_POSITION)) {
+                lift.setPower(-0.3);
+                lift.setTargetPosition(MAX_LIFT_POSITION);
+            }
+        } else if (gamepad1.left_trigger > 0.0) {
+            lift.setPower(-gamepad1.left_trigger);
+
+            if ((lift.getCurrentPosition() < MIN_LIFT_POSITION)) {
+                lift.setPower(0.3);
+                lift.setTargetPosition(MIN_LIFT_POSITION);
+            }
+        } else {
+            lift.setPower(0);
+        }
+
+        if (gamepad1.a && aTimer.milliseconds() > 250) {
             if (ringGrabberOpen) {
                 ringGrabber.setPosition(0);
                 ringGrabberOpen = false;
@@ -108,12 +117,7 @@ public class EllieTeleOpMode extends OpMode {
                 ringGrabber.setPosition(1);
                 ringGrabberOpen = true;
             }
-
-            try {
-                Thread.sleep(250);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            aTimer.reset();
         }
 
         if (gamepad1.dpad_left) {
@@ -138,7 +142,7 @@ public class EllieTeleOpMode extends OpMode {
         telemetry.addData("Grabber", grabber.getPosition());
         telemetry.addData("Lift position:", lift.getCurrentPosition());
         telemetry.addData("Ring grabber position:", ringGrabber.getPosition());
-        telemetry.addData("Trigger arm:", arm.getCurrentPosition());
+        telemetry.addData("Ring grabber arm:", arm.getCurrentPosition());
         telemetry.addData("Wheel multiplier:", wheelMultiplier);
         telemetry.update();
     }

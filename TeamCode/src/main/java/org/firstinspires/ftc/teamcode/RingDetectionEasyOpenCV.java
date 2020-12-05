@@ -15,7 +15,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import org.openftc.easyopencv.OpenCvPipeline;
 
 public class RingDetectionEasyOpenCV {
-    private final double ONE_RING_THRESHOLD = 2.0;
+    private final double ONE_RING_THRESHOLD = 2.5;
     private final double FOUR_RING_THRESHOLD = 5.0;
 
     private OpenCvCamera webcam;
