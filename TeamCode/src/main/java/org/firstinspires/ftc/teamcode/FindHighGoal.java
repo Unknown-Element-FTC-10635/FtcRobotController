@@ -15,21 +15,22 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class HighGoalAimAssist {
-    public void findHighGoal(String importFile, String exportFile) {
+public class FindHighGoal {
+    public Mat findHighGoal(String importFile, String exportFile) {
         Mat frame = Imgcodecs.imread(importFile);
         MatOfPoint bigBlueThing = findBigBlueThing(frame);
         Imgproc.drawContours(frame, Arrays.asList(bigBlueThing), -1, new Scalar(0, 255, 0), 10, Imgproc.LINE_8);
-
         Mat highGoal = findHighGoal(frame, bigBlueThing);
 
-
         Imgcodecs.imwrite(exportFile, highGoal);
+
+        return highGoal;
     }
 
     private Mat findHighGoal(Mat input, MatOfPoint contour) {
         Point[] points = contour.toArray();
         Point smallestX = new Point(Integer.MAX_VALUE, 0);
+        Point smallestY = new Point(0, Integer.MAX_VALUE);
         Point largestX = new Point(0, 0);
         Point largestY = new Point(0, 0);
 
@@ -43,21 +44,12 @@ public class HighGoalAimAssist {
             if (point.y > largestY.y) {
                 largestY = point;
             }
+            if (point.y < smallestY.y) {
+                smallestY = point;
+            }
         }
 
         double centerX = (smallestX.x + ((largestX.x - smallestX.x) / 2));
-        Point target = new Point(Math.floor(centerX), 0);
-        System.out.println(target);
-
-        for (Point point : points) {
-            System.out.println(point);
-            if (point.x == target.x) {
-
-                if (point.y > target.y) {
-                    target = point;
-                }
-            }
-        }
 
         System.out.printf("largest x: %s\n", largestX);
 
@@ -67,8 +59,6 @@ public class HighGoalAimAssist {
 
         Imgproc.line(input, new Point(smallestX.x, largestY.y), new Point(largestX.x, largestY.y), new Scalar(0, 0, 255), 10);
         Imgproc.circle(input, new Point(centerX, largestY.y), 8, new Scalar(255, 0, 0), -1);
-        Imgproc.circle(input, target, 8, new Scalar(255, 0, 0), -1);
-
 
         return input;
     }

@@ -10,7 +10,7 @@ public class HighGoalAimAssistTest {
         String importFile = "./src/test/resources/FourRings.jpeg";
         String exportFile = "./build/BlurredHSV.jpeg";
 
-        HighGoalAimAssist aimAssist = new HighGoalAimAssist();
-        aimAssist.findHighGoal(importFile, exportFile);
+        FindHighGoal highGoal = new FindHighGoal();
+        highGoal.findHighGoal(importFile, exportFile);
     }
 }
