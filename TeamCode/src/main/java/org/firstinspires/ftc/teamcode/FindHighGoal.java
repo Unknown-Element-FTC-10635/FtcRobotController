@@ -16,18 +16,14 @@ import java.util.Comparator;
 import java.util.List;
 
 public class FindHighGoal {
-    public Mat findHighGoal(String importFile, String exportFile) {
-        Mat frame = Imgcodecs.imread(importFile);
+    public Point findHighGoal(Mat frame) {
         MatOfPoint bigBlueThing = findBigBlueThing(frame);
         Imgproc.drawContours(frame, Arrays.asList(bigBlueThing), -1, new Scalar(0, 255, 0), 10, Imgproc.LINE_8);
-        Mat highGoal = findHighGoal(frame, bigBlueThing);
 
-        Imgcodecs.imwrite(exportFile, highGoal);
-
-        return highGoal;
+        return findHighGoal(frame, bigBlueThing);
     }
 
-    private Mat findHighGoal(Mat input, MatOfPoint contour) {
+    private Point findHighGoal(Mat input, MatOfPoint contour) {
         Point[] points = contour.toArray();
         Point smallestX = new Point(Integer.MAX_VALUE, 0);
         Point smallestY = new Point(0, Integer.MAX_VALUE);
@@ -50,6 +46,7 @@ public class FindHighGoal {
         }
 
         double centerX = (smallestX.x + ((largestX.x - smallestX.x) / 2));
+        Point centerPoint = new Point(centerX, largestY.y + 5);
 
         System.out.printf("largest x: %s\n", largestX);
 
@@ -60,14 +57,16 @@ public class FindHighGoal {
         Imgproc.line(input, new Point(smallestX.x, largestY.y), new Point(largestX.x, largestY.y), new Scalar(0, 0, 255), 10);
         Imgproc.circle(input, new Point(centerX, largestY.y), 8, new Scalar(255, 0, 0), -1);
 
-        return input;
+        Imgcodecs.imwrite("./build/BlurredHSV.jpeg", input);
+
+        return centerPoint;
     }
 
     private MatOfPoint findBigBlueThing(Mat input) {
         Mat frame = new Mat();
         Imgproc.blur(input, frame, new Size(7, 7));
 
-        Imgproc.cvtColor(frame, frame, Imgproc.COLOR_BGR2HSV);
+        Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
 
         Core.inRange(frame, new Scalar(109, 70, 50), new Scalar(180, 255, 255), frame);
 

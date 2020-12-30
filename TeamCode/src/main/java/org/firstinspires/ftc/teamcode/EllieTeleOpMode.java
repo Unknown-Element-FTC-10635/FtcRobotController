@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.opencv.core.Point;
+
 @TeleOp(name = "ukdrive")
 public class EllieTeleOpMode extends OpMode {
 
@@ -24,14 +26,20 @@ public class EllieTeleOpMode extends OpMode {
 
     private double wheelMultiplier;
 
+    AimAssistPipeline aimAssist = new AimAssistPipeline(hardwareMap);
+
     private ElapsedTime r3Timer = new ElapsedTime();
     private ElapsedTime aTimer = new ElapsedTime();
 
     private final int MAX_LIFT_POSITION = 1000;
     private final int MIN_LIFT_POSITION = 0;
 
+    private final Point RING_LAUNCH_POINT = new Point(320, 240);
+
     @Override
     public void init() {
+        aimAssist.start();
+
         frontLeftDC = hardwareMap.get(DcMotor.class, "Front_Left");
         frontRightDC = hardwareMap.get(DcMotor.class, "Front_Right");
         backLeftDC = hardwareMap.get(DcMotor.class, "Back_Left");
@@ -132,6 +140,10 @@ public class EllieTeleOpMode extends OpMode {
         }
         if (gamepad1.dpad_up) {
             grabber.setPosition(0.5);
+        }
+
+        if (gamepad1.y) {
+            Point centerOfHighGoal = aimAssist.getCenterOfHighGoal();
         }
 
         telemetry.addData("Front Left Motor Speed", frontLeftDC.getPower());
