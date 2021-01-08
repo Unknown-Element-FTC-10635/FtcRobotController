@@ -18,9 +18,15 @@ import java.util.List;
 public class FindHighGoal {
     public Point findHighGoal(Mat frame) {
         MatOfPoint bigBlueThing = findBigBlueThing(frame);
+
+        if (bigBlueThing == null) {
+            return null;
+        }
+
         Imgproc.drawContours(frame, Arrays.asList(bigBlueThing), -1, new Scalar(0, 255, 0), 10, Imgproc.LINE_8);
 
         return findHighGoal(frame, bigBlueThing);
+
     }
 
     private Point findHighGoal(Mat input, MatOfPoint contour) {
@@ -48,7 +54,7 @@ public class FindHighGoal {
         double centerX = (smallestX.x + ((largestX.x - smallestX.x) / 2));
         Point centerPoint = new Point(centerX, largestY.y + 5);
 
-        System.out.printf("largest x: %s\n", largestX);
+        //System.out.printf("largest x: %s\n", largestX);
 
         Imgproc.circle(input, smallestX, 8, new Scalar(0, 0, 255), -1);
         Imgproc.circle(input, largestX, 8, new Scalar(0, 0, 255), -1);
@@ -57,18 +63,15 @@ public class FindHighGoal {
         Imgproc.line(input, new Point(smallestX.x, largestY.y), new Point(largestX.x, largestY.y), new Scalar(0, 0, 255), 10);
         Imgproc.circle(input, new Point(centerX, largestY.y), 8, new Scalar(255, 0, 0), -1);
 
-        Imgcodecs.imwrite("./build/BlurredHSV.jpeg", input);
-
         return centerPoint;
     }
 
     private MatOfPoint findBigBlueThing(Mat input) {
         Mat frame = new Mat();
-        Imgproc.blur(input, frame, new Size(7, 7));
+        Imgproc.cvtColor(input, frame, Imgproc.COLOR_RGB2HSV);
 
-        Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGB2HSV);
-
-        Core.inRange(frame, new Scalar(109, 70, 50), new Scalar(180, 255, 255), frame);
+        Imgproc.blur(frame, frame, new Size(7, 7));
+        Core.inRange(frame, new Scalar(95, 70, 50), new Scalar(160, 255, 255), frame);
 
         List<MatOfPoint> contours = new ArrayList<>();
         Mat hierarchy = new Mat();
@@ -77,15 +80,20 @@ public class FindHighGoal {
         Collections.sort(contours, new Comparator<MatOfPoint>() {
             @Override
             public int compare(MatOfPoint o1, MatOfPoint o2) {
-                double area1 = Imgproc.contourArea(o1);
-                double area2 = Imgproc.contourArea(o2);
-                return (int) (area2 - area1);
+                int area1 = (int) Imgproc.contourArea(o1);
+                int area2 = (int) Imgproc.contourArea(o2);
+                return (area2 - area1);
             }
         });
 
-        List<MatOfPoint> sublist = contours.subList(0, 1);
-        System.out.printf("sublist length: %d\n", sublist.size());
+        if (contours.isEmpty()) {
+            //System.out.println("No object found");
+            return null;
+        } else {
+            List<MatOfPoint> sublist = contours.subList(0, 1);
+            //System.out.printf("sublist length: %d\n", sublist.size());
+            return contours.get(0);
+        }
 
-        return contours.get(0);
     }
 }

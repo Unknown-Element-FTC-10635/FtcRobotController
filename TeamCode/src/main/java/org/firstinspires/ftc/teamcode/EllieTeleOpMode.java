@@ -26,7 +26,7 @@ public class EllieTeleOpMode extends OpMode {
 
     private double wheelMultiplier;
 
-    AimAssistPipeline aimAssist = new AimAssistPipeline(hardwareMap);
+    private AimAssistPipeline aimAssist;
 
     private ElapsedTime r3Timer = new ElapsedTime();
     private ElapsedTime aTimer = new ElapsedTime();
@@ -38,6 +38,7 @@ public class EllieTeleOpMode extends OpMode {
 
     @Override
     public void init() {
+        aimAssist = new AimAssistPipeline(hardwareMap);
         aimAssist.start();
 
         frontLeftDC = hardwareMap.get(DcMotor.class, "Front_Left");
