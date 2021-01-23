@@ -3,71 +3,87 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.opencv.core.Point;
+import org.openftc.revextensions2.ExpansionHubMotor;
+import org.openftc.revextensions2.ExpansionHubServo;
 
 @TeleOp(name = "ukdrive")
 public class EllieTeleOpMode extends OpMode {
 
-    private DcMotor frontLeftDC;
-    private DcMotor backLeftDC;
-    private DcMotor frontRightDC;
-    private DcMotor backRightDC;
-    private DcMotor lift;
-    private DcMotor arm;
+    ExpansionHubMotor launch1, launch2, intake,  wobble;
+    ExpansionHubServo flicker, leftLinkage, rightLinkage, gripper;
 
-    private Servo armSwivel;
-    private Servo grabber;
-    private Servo ringGrabber;
-
-    private boolean ringGrabberOpen;
+    DcMotor frontLeft, frontRight, backLeft, backRight;
 
     private double wheelMultiplier;
 
     private AimAssistPipeline aimAssist;
 
     private ElapsedTime r3Timer = new ElapsedTime();
-    private ElapsedTime aTimer = new ElapsedTime();
-
-    private final int MAX_LIFT_POSITION = 1000;
-    private final int MIN_LIFT_POSITION = 0;
+    private ElapsedTime bTimer = new ElapsedTime();
+    private ElapsedTime optionsTimer = new ElapsedTime();
 
     private final Point RING_LAUNCH_POINT = new Point(320, 240);
+
+    int rpm;
+    int targetRPM = 4000;
+
+    boolean launcherEnable = false;
+    double idlePower = 0.58;
+
+    final double SERVO_OUT = 0.425;
+    final double SERVO_IN = 0.292;
+    final double LEFT_LINKAGE_IN = 0.27;
+    final double LEFT_LINKAGE_OUT = 0.9064;
+    final double RIGHT_LINKAGE_IN = 0.7084;
+    final double RIGHT_LINKAGE_OUT = 0.0449;
+    final double GRIPPER_CLOSED = 0.52;
+    final double GRIPPER_OPEN = 0;
+
+    private boolean grabberOpen = false;
+    private boolean intakeReversed = false;
+    private boolean intakeOff = true;
+    private boolean intakeIn = true;
+
+    double servoPosition = 0.5;
+    int launcherState = -1;
+    ElapsedTime servoTimer = new ElapsedTime();
 
     @Override
     public void init() {
         aimAssist = new AimAssistPipeline(hardwareMap);
         aimAssist.start();
 
-        frontLeftDC = hardwareMap.get(DcMotor.class, "Front_Left");
-        frontRightDC = hardwareMap.get(DcMotor.class, "Front_Right");
-        backLeftDC = hardwareMap.get(DcMotor.class, "Back_Left");
-        backRightDC = hardwareMap.get(DcMotor.class, "Back_Right");
-        lift = hardwareMap.get(DcMotor.class, "Lift");
-        arm = hardwareMap.get(DcMotor.class, "Arm");
+        launch1 = hardwareMap.get(ExpansionHubMotor.class, "launch1");
+        launch2 = hardwareMap.get(ExpansionHubMotor.class, "launch2");
+        intake = hardwareMap.get(ExpansionHubMotor.class, "intake");
+        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
+        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
+        backRight = hardwareMap.get(DcMotor.class, "backRight");
+        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
+        wobble = hardwareMap.get(ExpansionHubMotor.class, "wobble");
+//        launch1.setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDCoefficients(140, 10, 0));
+//        launch2.setPIDCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDCoefficients(140, 10, 0));
 
-        armSwivel = hardwareMap.get(Servo.class, "Arm_Swivel");
-        grabber = hardwareMap.get(Servo.class, "Grabber");
-        ringGrabber = hardwareMap.get(Servo.class, "Ring_Grabber");
+        wobble.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        frontLeftDC.setDirection(DcMotor.Direction.FORWARD);
-        backLeftDC.setDirection(DcMotor.Direction.FORWARD);
-        frontRightDC.setDirection(DcMotor.Direction.REVERSE);
-        backRightDC.setDirection(DcMotor.Direction.REVERSE);
+        launch1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        launch2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        frontLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeftDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRightDC.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        arm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        wobble.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-        ringGrabberOpen = false;
+        flicker = hardwareMap.get(ExpansionHubServo.class, "flicker");
+        leftLinkage = hardwareMap.get(ExpansionHubServo.class, "leftLinkage");
+        rightLinkage = hardwareMap.get(ExpansionHubServo.class, "rightLinkage");
+        gripper = hardwareMap.get(ExpansionHubServo.class, "gripper");
 
         wheelMultiplier = 1;
 
@@ -77,6 +93,10 @@ public class EllieTeleOpMode extends OpMode {
 
     @Override
     public void loop() {
+        // 7*4 ticks per rev, 1.5 gear ratio, 60 seconds
+        int rpm = (int) (60 * (launch1.getVelocity() / 28.0) * 1.5);
+
+        // Enable and Disable Slowmode
         if (gamepad1.right_stick_button && r3Timer.milliseconds() > 250) {
             if (wheelMultiplier == 1) {
                 wheelMultiplier = 0.25;
@@ -87,76 +107,146 @@ public class EllieTeleOpMode extends OpMode {
             r3Timer.reset();
         }
 
-        frontLeftDC.setPower(((gamepad1.left_stick_y - gamepad1.left_stick_x) - gamepad1.right_stick_x) * wheelMultiplier);
-        backLeftDC.setPower(((gamepad1.left_stick_y + gamepad1.left_stick_x) - gamepad1.right_stick_x) * wheelMultiplier);
-        frontRightDC.setPower(((gamepad1.left_stick_y + gamepad1.left_stick_x) + gamepad1.right_stick_x) * wheelMultiplier);
-        backRightDC.setPower(((gamepad1.left_stick_y - gamepad1.left_stick_x) + gamepad1.right_stick_x) * wheelMultiplier);
+        // Movement
+        frontLeft.setPower(((gamepad1.left_stick_y - gamepad1.left_stick_x) - gamepad1.right_stick_x) * wheelMultiplier);
+        backLeft.setPower(((gamepad1.left_stick_y + gamepad1.left_stick_x) - gamepad1.right_stick_x) * wheelMultiplier);
+        frontRight.setPower(-((gamepad1.left_stick_y + gamepad1.left_stick_x) + gamepad1.right_stick_x) * wheelMultiplier);
+        backRight.setPower(-((gamepad1.left_stick_y - gamepad1.left_stick_x) + gamepad1.right_stick_x) * wheelMultiplier);
 
+        // Increase TargetRPM
         if (gamepad1.right_bumper) {
-            arm.setPower(0.5);
-        } else if (gamepad1.left_bumper) {
-            arm.setPower(-0.5);
-        } else {
-            arm.setPower(0);
+            targetRPM += 1;
         }
 
-        if (gamepad1.right_trigger > 0.0) {
-            lift.setPower(gamepad1.right_trigger);
-
-            if ((lift.getCurrentPosition() > MAX_LIFT_POSITION)) {
-                lift.setPower(-0.3);
-                lift.setTargetPosition(MAX_LIFT_POSITION);
-            }
-        } else if (gamepad1.left_trigger > 0.0) {
-            lift.setPower(-gamepad1.left_trigger);
-
-            if ((lift.getCurrentPosition() < MIN_LIFT_POSITION)) {
-                lift.setPower(0.3);
-                lift.setTargetPosition(MIN_LIFT_POSITION);
-            }
-        } else {
-            lift.setPower(0);
+        // Decrease TargetRPM
+        if (gamepad1.left_bumper) {
+            targetRPM -= 1;
         }
 
-        if (gamepad1.a && aTimer.milliseconds() > 250) {
-            if (ringGrabberOpen) {
-                ringGrabber.setPosition(0);
-                ringGrabberOpen = false;
+        // Arm Up and Down
+        wobble.setPower((gamepad1.right_trigger - gamepad1.left_trigger) * .5);
+
+        // Grabber
+        if (gamepad1.b && bTimer.milliseconds() > 250) {
+            bTimer.reset();
+            if (grabberOpen) {
+                gripper.setPosition(GRIPPER_CLOSED);
+                grabberOpen = false;
             } else {
-                ringGrabber.setPosition(1);
-                ringGrabberOpen = true;
+                gripper.setPosition(GRIPPER_OPEN);
+                grabberOpen = true;
             }
-            aTimer.reset();
         }
 
-        if (gamepad1.dpad_left) {
-            armSwivel.setPosition(armSwivel.getPosition() - 0.01);
-        }
-        if (gamepad1.dpad_right) {
-            armSwivel.setPosition(armSwivel.getPosition() + 0.01);
+        // Intake Direction
+        if (gamepad1.dpad_down && !intakeOff) {
+            if (intakeReversed) {
+                intake.setPower(1);
+                intakeReversed = false;
+            } else {
+                intake.setPower(-1);
+                intakeReversed = true;
+            }
         }
 
-        if (gamepad1.dpad_down) {
-            grabber.setPosition(0);
-        }
+        // Intake on or off
         if (gamepad1.dpad_up) {
-            grabber.setPosition(0.5);
+            if (intakeOff) {
+                intake.setPower(1);
+                intakeOff = false;
+            } else {
+                intake.setPower(0);
+            }
         }
 
+        // Open close intake
+        if (gamepad1.options && optionsTimer.milliseconds() > 250) {
+            if (intakeIn) {
+                leftLinkage.setPosition(LEFT_LINKAGE_OUT);
+                rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
+                intakeIn = false;
+            } else {
+                leftLinkage.setPosition(LEFT_LINKAGE_IN);
+                rightLinkage.setPosition(RIGHT_LINKAGE_IN);
+                intakeIn = true;
+            }
+        }
+
+        // Enable launcher
+        if (gamepad1.y && !intakeIn) {
+            launcherEnable = true;
+            launcherState = 1;
+        }
+
+        // Launcher
+        switch (launcherState) {
+            case 0:
+                leftLinkage.setPosition(LEFT_LINKAGE_OUT);
+                rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
+                launcherState++;
+                launcherEnable = true;
+                break;
+            case 1:
+                if (rpm + 250 > targetRPM) {
+                    launcherState++;
+                }
+                break;
+            case 2:
+                telemetry.addLine("CASE 3");
+                servoTimer.reset();
+                for (int i = 0; i < 3; i++) {
+                    telemetry.addLine("LOOP START");
+                    flicker.setPosition(SERVO_OUT);
+                    while (servoTimer.milliseconds() < 120) { }
+                    servoTimer.reset();
+
+                    flicker.setPosition(SERVO_IN);
+                    while (servoTimer.milliseconds() < 120) { }
+
+                    servoTimer.reset();
+                    telemetry.addLine("LOOP END");
+                }
+                launcherState++;
+                flicker.setPosition(SERVO_IN);
+                break;
+            case 3:
+                if (servoTimer.milliseconds() > 120) {//in time
+                    launcherEnable = false;
+                    launch1.setPower(0);
+                    launch2.setPower(0);
+                    launcherState++;
+                }
+                break;
+        }
+
+        if (launcherEnable) {
+            if (rpm < targetRPM) {
+                if (rpm < targetRPM - 250) {
+                    launch1.setPower(1);
+                    launch2.setPower(1);
+                } else {
+                    launch1.setPower(idlePower);
+                    launch2.setPower(idlePower);
+                }
+                idlePower += 0.0003;
+            } else {
+                launch1.setPower(idlePower);
+                launch2.setPower(idlePower);
+                idlePower -= 0.0003;
+            }
+        }
+
+        /*
+        // TODO: aim-assist
         if (gamepad1.y) {
             Point centerOfHighGoal = aimAssist.getCenterOfHighGoal();
-        }
+        } */
 
-        telemetry.addData("Front Left Motor Speed", frontLeftDC.getPower());
-        telemetry.addData("Back Left Motor Speed", backLeftDC.getPower());
-        telemetry.addData("Front Right Motor Speed", frontRightDC.getPower());
-        telemetry.addData("Back Right Motor Speed", backRightDC.getPower());
-        telemetry.addData("Arm swivel:", armSwivel.getPosition());
-        telemetry.addData("Grabber", grabber.getPosition());
-        telemetry.addData("Lift position:", lift.getCurrentPosition());
-        telemetry.addData("Ring grabber position:", ringGrabber.getPosition());
-        telemetry.addData("Ring grabber arm:", arm.getCurrentPosition());
         telemetry.addData("Wheel multiplier:", wheelMultiplier);
+        telemetry.addData("RPM:", rpm);
+        telemetry.addData("Target RPM", targetRPM);
+        telemetry.addData("Timer", servoTimer.milliseconds());
+
         telemetry.update();
     }
 }
