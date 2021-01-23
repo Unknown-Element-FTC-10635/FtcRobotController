@@ -20,7 +20,7 @@ public class EllieTeleOpMode extends OpMode {
 
     private double wheelMultiplier;
 
-    private AimAssistPipeline aimAssist;
+   // private AimAssistPipeline aimAssist;
 
     private ElapsedTime r3Timer = new ElapsedTime();
     private ElapsedTime bTimer = new ElapsedTime();
@@ -54,8 +54,8 @@ public class EllieTeleOpMode extends OpMode {
 
     @Override
     public void init() {
-        aimAssist = new AimAssistPipeline(hardwareMap);
-        aimAssist.start();
+       // aimAssist = new AimAssistPipeline(hardwareMap);
+       // aimAssist.start();
 
         launch1 = hardwareMap.get(ExpansionHubMotor.class, "launch1");
         launch2 = hardwareMap.get(ExpansionHubMotor.class, "launch2");
@@ -94,7 +94,7 @@ public class EllieTeleOpMode extends OpMode {
     @Override
     public void loop() {
         // 7*4 ticks per rev, 1.5 gear ratio, 60 seconds
-        int rpm = (int) (60 * (launch1.getVelocity() / 28.0) * 1.5);
+        rpm = (int) (60 * (launch1.getVelocity() / 28.0) * 1.5);
 
         // Enable and Disable Slowmode
         if (gamepad1.right_stick_button && r3Timer.milliseconds() > 250) {
@@ -161,6 +161,7 @@ public class EllieTeleOpMode extends OpMode {
 
         // Open close intake
         if (gamepad1.options && optionsTimer.milliseconds() > 250) {
+            optionsTimer.reset();
             if (intakeIn) {
                 leftLinkage.setPosition(LEFT_LINKAGE_OUT);
                 rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
@@ -174,8 +175,8 @@ public class EllieTeleOpMode extends OpMode {
 
         // Enable launcher
         if (gamepad1.y && !intakeIn) {
-            launcherEnable = true;
-            launcherState = 1;
+        //    launcherEnable = true;
+            launcherState = 0;
         }
 
         // Launcher
@@ -184,18 +185,18 @@ public class EllieTeleOpMode extends OpMode {
                 leftLinkage.setPosition(LEFT_LINKAGE_OUT);
                 rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
                 launcherState++;
-                launcherEnable = true;
+                increaseRPM();
+               // launcherEnable = true;
                 break;
             case 1:
-                if (rpm + 250 > targetRPM) {
+                increaseRPM();
+                if (rpm >= targetRPM) {
                     launcherState++;
                 }
                 break;
             case 2:
-                telemetry.addLine("CASE 3");
                 servoTimer.reset();
                 for (int i = 0; i < 3; i++) {
-                    telemetry.addLine("LOOP START");
                     flicker.setPosition(SERVO_OUT);
                     while (servoTimer.milliseconds() < 120) { }
                     servoTimer.reset();
@@ -204,36 +205,19 @@ public class EllieTeleOpMode extends OpMode {
                     while (servoTimer.milliseconds() < 120) { }
 
                     servoTimer.reset();
-                    telemetry.addLine("LOOP END");
+                    increaseRPM();
                 }
                 launcherState++;
                 flicker.setPosition(SERVO_IN);
                 break;
             case 3:
                 if (servoTimer.milliseconds() > 120) {//in time
-                    launcherEnable = false;
+                 //   launcherEnable = false;
                     launch1.setPower(0);
                     launch2.setPower(0);
                     launcherState++;
                 }
                 break;
-        }
-
-        if (launcherEnable) {
-            if (rpm < targetRPM) {
-                if (rpm < targetRPM - 250) {
-                    launch1.setPower(1);
-                    launch2.setPower(1);
-                } else {
-                    launch1.setPower(idlePower);
-                    launch2.setPower(idlePower);
-                }
-                idlePower += 0.0003;
-            } else {
-                launch1.setPower(idlePower);
-                launch2.setPower(idlePower);
-                idlePower -= 0.0003;
-            }
         }
 
         /*
@@ -248,5 +232,22 @@ public class EllieTeleOpMode extends OpMode {
         telemetry.addData("Timer", servoTimer.milliseconds());
 
         telemetry.update();
+    }
+
+    private void increaseRPM() {
+        if (rpm < targetRPM) {
+            if (rpm < targetRPM - 250) {
+                launch1.setPower(1);
+                launch2.setPower(1);
+            } else {
+                launch1.setPower(idlePower);
+                launch2.setPower(idlePower);
+            }
+            idlePower += 0.0003;
+        } else {
+            launch1.setPower(idlePower);
+            launch2.setPower(idlePower);
+            idlePower -= 0.0003;
+        }
     }
 }
