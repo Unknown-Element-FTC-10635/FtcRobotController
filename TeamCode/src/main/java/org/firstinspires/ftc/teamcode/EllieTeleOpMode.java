@@ -30,7 +30,7 @@ public class EllieTeleOpMode extends OpMode {
 
     int rpm;
     int targetRPM = 3800;
-    int targetPowerShotRPM = 2500;
+    int targetPowerShotRPM = 3000;
 
     boolean launcherEnable = false;
     boolean powershotEnable = false;
@@ -236,8 +236,8 @@ public class EllieTeleOpMode extends OpMode {
         }
 
         if (launcherEnable) {
-            if (rpm < targetRPM || rpm < targetPowerShotRPM) {
-                if (rpm < targetRPM - 250 || rpm < targetPowerShotRPM - 250) {
+            if (rpm < (powershotEnable ? targetPowerShotRPM : targetRPM)) {
+                if (rpm < (powershotEnable ? targetPowerShotRPM - 150 : targetRPM - 150)) {
                     launch1.setPower(1);
                     launch2.setPower(1);
                 } else {
@@ -251,6 +251,7 @@ public class EllieTeleOpMode extends OpMode {
                 idlePower -= 0.0003;
             }
         }
+
         /*
         // TODO: aim-assist
         if (gamepad1.y) {
