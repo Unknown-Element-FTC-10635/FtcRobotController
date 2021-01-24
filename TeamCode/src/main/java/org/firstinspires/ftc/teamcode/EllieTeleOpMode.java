@@ -30,7 +30,7 @@ public class EllieTeleOpMode extends OpMode {
 
     int rpm;
     int targetRPM = 3800;
-    int targetPowerShotRPM = 3300;
+    int targetPowerShotRPM = 2900;
 
     boolean launcherEnable = false;
     boolean powershotEnable = false;
@@ -206,6 +206,9 @@ public class EllieTeleOpMode extends OpMode {
                 flicker.setPosition(SERVO_IN);
                 break;
             case 3:
+            case 5:
+            case 7:
+            case 9:
                 if (servoTimer.milliseconds() > 120) {//in time
                     servoTimer.reset();
                     launcherState++;
@@ -213,45 +216,12 @@ public class EllieTeleOpMode extends OpMode {
                 }
                 break;
             case 4:
-                if (servoTimer.milliseconds() > 120) {//out time
-                    servoTimer.reset();
-                    launcherState++;
-                    flicker.setPosition(SERVO_IN);
-                }
-                break;
-            case 5:
-                if (servoTimer.milliseconds() > 120) {//in time
-                    servoTimer.reset();
-                    launcherState++;
-                    flicker.setPosition(SERVO_OUT);
-                }
-                break;
             case 6:
-                if (servoTimer.milliseconds() > 120) {//out time
-                    servoTimer.reset();
-                    launcherState++;
-                    flicker.setPosition(SERVO_IN);
-                }
-                break;
-            case 7:
-                if (servoTimer.milliseconds() > 120) {//in time
-                    servoTimer.reset();
-                    launcherState++;
-                    flicker.setPosition(SERVO_OUT);
-                }
-                break;
             case 8:
                 if (servoTimer.milliseconds() > 120) {//out time
                     servoTimer.reset();
                     launcherState++;
                     flicker.setPosition(SERVO_IN);
-                }
-                break;
-            case 9:
-                if (servoTimer.milliseconds() > 120) {//in time
-                    servoTimer.reset();
-                    launcherState++;
-                    flicker.setPosition(SERVO_OUT);
                 }
                 break;
             case 10:
