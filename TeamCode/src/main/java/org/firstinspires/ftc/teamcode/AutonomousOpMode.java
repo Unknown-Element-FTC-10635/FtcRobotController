@@ -22,6 +22,9 @@ public class AutonomousOpMode extends LinearOpMode {
     @Override
     public void runOpMode() {
         FtcDashboard.start();
+
+        boolean launcherState = false;
+
         drive = new SampleMecanumDrive(hardwareMap);
 
         drive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -35,8 +38,8 @@ public class AutonomousOpMode extends LinearOpMode {
         Pose2d blueStart = new Pose2d(-63, 18, 0);
         Vector2d avoidRingsPoint = new Vector2d(-10, 24);
 
-        final Vector2d square1 = new Vector2d(5, 62);
-        final Vector2d square2 = new Vector2d(25, 32);
+        final Vector2d square1 = new Vector2d(10, 40);
+        final Vector2d square2 = new Vector2d(30, 12);
         final Vector2d square3 = new Vector2d(55, 40);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
@@ -76,12 +79,12 @@ public class AutonomousOpMode extends LinearOpMode {
         switch (numberOfRings) {
             case 0:
                 drive.followTrajectory(trajectoryToSquare1);
-               // afterRingCount(new Pose2d(-4, 55, 0), vectorToPose(square1, 0));
+                afterRingCount(new Pose2d(-4, 55, 0), vectorToPose(square1, 0));
                 break;
 
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
-               // afterRingCount(new Pose2d(25, 41, 0), vectorToPose(square2, 0));
+                afterRingCount(new Pose2d(25, 41, 0), vectorToPose(square2, 0));
                 break;
 
             case 4:
@@ -113,16 +116,19 @@ public class AutonomousOpMode extends LinearOpMode {
         Trajectory returnToSquare = drive.trajectoryBuilder(rotateBack.end())
                 .splineToLinearHeading(destination, 0)
                 .build();
-        Trajectory reverseFromWobbles = drive.trajectoryBuilder(returnToSquare.end())
-                .back(14)
+        Trajectory reverseFromWobbles = drive.trajectoryBuilder(currentSquare)
+                .back(15)
                 .build();
-        Trajectory parkOnLine = drive.trajectoryBuilder(reverseFromWobbles.end())
-                .strafeTo(new Vector2d(10, 30))
+        Trajectory parkbehindLine = drive.trajectoryBuilder(reverseFromWobbles.end())
+                .strafeTo(new Vector2d(-5, 38))
+                .build();
+        Trajectory parkOnLine = drive.trajectoryBuilder(parkbehindLine.end())
+                .strafeTo(new Vector2d(4, 38))
                 .build();
 
-        wobbleArm.setPower(.25);
+        wobbleArm.setPower(.1);
 
-        sleep(1250);
+        sleep(2500);
 
         grabber.setPosition(0);
 
@@ -152,7 +158,8 @@ public class AutonomousOpMode extends LinearOpMode {
         */
 
         drive.followTrajectory(reverseFromWobbles);
-        drive.followTrajectory(parkOnLine);
+        drive.followTrajectory(parkbehindLine);
+
     }
 
     private Pose2d vectorToPose(Vector2d vector, int heading) {
