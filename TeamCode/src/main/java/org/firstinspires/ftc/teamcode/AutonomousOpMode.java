@@ -9,8 +9,11 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.openftc.revextensions2.ExpansionHubMotor;
+import org.openftc.revextensions2.ExpansionHubServo;
 
 @Config
 @Autonomous(group = "ukdrive")
@@ -19,11 +22,33 @@ public class AutonomousOpMode extends LinearOpMode {
     Servo grabber;
     SampleMecanumDrive drive;
 
+    ExpansionHubMotor launch1, launch2;
+    ExpansionHubServo flicker, leftLinkage, rightLinkage;
+
+    int rpm;
+    int targetRPM = 3800;
+    int targetPowerShotRPM = 2900;
+
+    boolean launcherEnable = false;
+    boolean powershotEnable = false;
+    double idlePower = 0.58;
+
+    final double SERVO_OUT = 0.425;
+    final double SERVO_IN = 0.292;
+    final double LEFT_LINKAGE_IN = 0.27;
+    final double LEFT_LINKAGE_OUT = 0.9064;
+    final double RIGHT_LINKAGE_IN = 0.7084;
+    final double RIGHT_LINKAGE_OUT = 0.0449;
+    final double GRIPPER_CLOSED = 0.55;
+    final double GRIPPER_OPEN = 0;
+
+    int launcherState = -1;
+    ElapsedTime servoTimer = new ElapsedTime();
+
+
     @Override
     public void runOpMode() {
         FtcDashboard.start();
-
-        boolean launcherState = false;
 
         drive = new SampleMecanumDrive(hardwareMap);
 
@@ -33,13 +58,22 @@ public class AutonomousOpMode extends LinearOpMode {
         wobbleArm = hardwareMap.get(DcMotor.class, "wobble");
         grabber = hardwareMap.get(Servo.class, "gripper");
 
+        launch1 = hardwareMap.get(ExpansionHubMotor.class, "launch1");
+        launch2 = hardwareMap.get(ExpansionHubMotor.class, "launch2");
+        flicker = hardwareMap.get(ExpansionHubServo.class, "flicker");
+        leftLinkage = hardwareMap.get(ExpansionHubServo.class, "leftLinkage");
+        rightLinkage = hardwareMap.get(ExpansionHubServo.class, "rightLinkage");
+
+        launch1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        launch2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         wobbleArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         Pose2d blueStart = new Pose2d(-63, 18, 0);
         Vector2d avoidRingsPoint = new Vector2d(-10, 24);
 
         final Vector2d square1 = new Vector2d(10, 40);
-        final Vector2d square2 = new Vector2d(30, 12);
+        final Vector2d square2 = new Vector2d(30, 15);
         final Vector2d square3 = new Vector2d(55, 40);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
@@ -120,7 +154,7 @@ public class AutonomousOpMode extends LinearOpMode {
                 .back(15)
                 .build();
         Trajectory parkbehindLine = drive.trajectoryBuilder(reverseFromWobbles.end())
-                .strafeTo(new Vector2d(-5, 38))
+                .strafeTo(new Vector2d(-8, 38))
                 .build();
         Trajectory parkOnLine = drive.trajectoryBuilder(parkbehindLine.end())
                 .strafeTo(new Vector2d(4, 38))
@@ -128,7 +162,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
         wobbleArm.setPower(.1);
 
-        sleep(2500);
+        sleep(3000);
 
         grabber.setPosition(0);
 
@@ -158,7 +192,79 @@ public class AutonomousOpMode extends LinearOpMode {
         */
 
         drive.followTrajectory(reverseFromWobbles);
+        wobbleArm.setPower(0);
         drive.followTrajectory(parkbehindLine);
+        launcherEnable = true;
+        launcherState = 0;
+
+        while (launcherEnable) {
+            rpm = (int) (60 * (launch1.getVelocity() / 28.0) * 1.5);
+
+            switch (launcherState) {
+                case 0:
+                    leftLinkage.setPosition(LEFT_LINKAGE_OUT);
+                    rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
+                    launcherState++;
+                    launcherEnable = true;
+                    break;
+                case 1:
+                    if (rpm + 250 > targetRPM) {
+                        launcherState++; }
+                    break;
+                case 2:
+                    servoTimer.reset();
+                    launcherState++;
+                    flicker.setPosition(SERVO_IN);
+                    break;
+                case 3:
+                case 5:
+                case 7:
+                case 9:
+                    if (servoTimer.milliseconds() > 120) {//in time
+                        servoTimer.reset();
+                        launcherState++;
+                        flicker.setPosition(SERVO_OUT);
+                    }
+                    break;
+                case 4:
+                case 6:
+                case 8:
+                    if (servoTimer.milliseconds() > 120) {//out time
+                        servoTimer.reset();
+                        launcherState++;
+                        flicker.setPosition(SERVO_IN);
+                    }
+                    break;
+                case 10:
+                    if (servoTimer.milliseconds() > 120) {//in time
+                        launcherEnable = false;
+                        powershotEnable = false;
+                        launch1.setPower(0);
+                        launch2.setPower(0);
+                        launcherState++;
+                    }
+                    break;
+            }
+
+            if (launcherEnable) {
+                if (rpm < targetRPM) {
+                    if (rpm < targetRPM - 250) {
+                        launch1.setPower(1);
+                        launch2.setPower(1);
+                    } else {
+                        launch1.setPower(idlePower);
+                        launch2.setPower(idlePower);
+                    }
+                    idlePower += 0.0003;
+                } else {
+                    launch1.setPower(idlePower);
+                    launch2.setPower(idlePower);
+                    idlePower -= 0.0003;
+                }
+            }
+        }
+
+        drive.followTrajectory(parkOnLine);
 
     }
 
