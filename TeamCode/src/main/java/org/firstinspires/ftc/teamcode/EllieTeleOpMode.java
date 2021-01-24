@@ -29,9 +29,11 @@ public class EllieTeleOpMode extends OpMode {
     private final Point RING_LAUNCH_POINT = new Point(320, 240);
 
     int rpm;
-    int targetRPM = 4000;
+    int targetRPM = 3800;
+    int targetPowerShotRPM = 3300;
 
     boolean launcherEnable = false;
+    boolean powershotEnable = false;
     double idlePower = 0.58;
 
     final double SERVO_OUT = 0.425;
@@ -124,7 +126,7 @@ public class EllieTeleOpMode extends OpMode {
         }
 
         // Arm Up and Down
-        wobble.setPower((gamepad1.right_trigger - gamepad1.left_trigger) * .5);
+        wobble.setPower((gamepad1.left_trigger - gamepad1.right_trigger) * .5);
 
         // Grabber
         if (gamepad1.b && bTimer.milliseconds() > 250) {
@@ -140,19 +142,17 @@ public class EllieTeleOpMode extends OpMode {
 
         // Intake Direction
         if (gamepad1.dpad_down && !intakeOff) {
-            if (intakeReversed) {
-                intake.setPower(1);
-                intakeReversed = false;
-            } else {
-                intake.setPower(-1);
-                intakeReversed = true;
-            }
+            intake.setPower(1);
+        }
+
+        if (gamepad1.dpad_left && !intakeOff) {
+            intake.setPower(-1);
         }
 
         // Intake on or off
         if (gamepad1.dpad_up) {
             if (intakeOff) {
-                intake.setPower(1);
+                intake.setPower(-1);
                 intakeOff = false;
             } else {
                 intake.setPower(0);
@@ -173,9 +173,14 @@ public class EllieTeleOpMode extends OpMode {
             }
         }
 
+        // Powershot launcher
+        if (gamepad1.a) {
+            powershotEnable = true;
+            launcherState = 0;
+        }
+
         // Enable launcher
-        if (gamepad1.y && !intakeIn) {
-        //    launcherEnable = true;
+        if (gamepad1.y) {
             launcherState = 0;
         }
 
@@ -185,34 +190,74 @@ public class EllieTeleOpMode extends OpMode {
                 leftLinkage.setPosition(LEFT_LINKAGE_OUT);
                 rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
                 launcherState++;
-                increaseRPM();
-               // launcherEnable = true;
+                launcherEnable = true;
                 break;
             case 1:
-                increaseRPM();
-                if (rpm >= targetRPM) {
-                    launcherState++;
-                }
+                if ((rpm + 250 > targetRPM) || (rpm + 250 > targetPowerShotRPM))
+                    if (powershotEnable) {
+                        launcherState = 8;
+                    } else {
+                        launcherState++;
+                    }
                 break;
             case 2:
                 servoTimer.reset();
-                for (int i = 0; i < 3; i++) {
-                    flicker.setPosition(SERVO_OUT);
-                    while (servoTimer.milliseconds() < 120) { }
-                    servoTimer.reset();
-
-                    flicker.setPosition(SERVO_IN);
-                    while (servoTimer.milliseconds() < 120) { }
-
-                    servoTimer.reset();
-                    increaseRPM();
-                }
                 launcherState++;
                 flicker.setPosition(SERVO_IN);
                 break;
             case 3:
                 if (servoTimer.milliseconds() > 120) {//in time
-                 //   launcherEnable = false;
+                    servoTimer.reset();
+                    launcherState++;
+                    flicker.setPosition(SERVO_OUT);
+                }
+                break;
+            case 4:
+                if (servoTimer.milliseconds() > 120) {//out time
+                    servoTimer.reset();
+                    launcherState++;
+                    flicker.setPosition(SERVO_IN);
+                }
+                break;
+            case 5:
+                if (servoTimer.milliseconds() > 120) {//in time
+                    servoTimer.reset();
+                    launcherState++;
+                    flicker.setPosition(SERVO_OUT);
+                }
+                break;
+            case 6:
+                if (servoTimer.milliseconds() > 120) {//out time
+                    servoTimer.reset();
+                    launcherState++;
+                    flicker.setPosition(SERVO_IN);
+                }
+                break;
+            case 7:
+                if (servoTimer.milliseconds() > 120) {//in time
+                    servoTimer.reset();
+                    launcherState++;
+                    flicker.setPosition(SERVO_OUT);
+                }
+                break;
+            case 8:
+                if (servoTimer.milliseconds() > 120) {//out time
+                    servoTimer.reset();
+                    launcherState++;
+                    flicker.setPosition(SERVO_IN);
+                }
+                break;
+            case 9:
+                if (servoTimer.milliseconds() > 120) {//in time
+                    servoTimer.reset();
+                    launcherState++;
+                    flicker.setPosition(SERVO_OUT);
+                }
+                break;
+            case 10:
+                if (servoTimer.milliseconds() > 120) {//in time
+                    launcherEnable = false;
+                    powershotEnable = false;
                     launch1.setPower(0);
                     launch2.setPower(0);
                     launcherState++;
@@ -220,6 +265,22 @@ public class EllieTeleOpMode extends OpMode {
                 break;
         }
 
+        if (launcherEnable) {
+            if (rpm < targetRPM || rpm < targetPowerShotRPM) {
+                if (rpm < targetRPM - 250 || rpm < targetPowerShotRPM - 2500) {
+                    launch1.setPower(1);
+                    launch2.setPower(1);
+                } else {
+                    launch1.setPower(idlePower);
+                    launch2.setPower(idlePower);
+                }
+                idlePower += 0.0003;
+            } else {
+                launch1.setPower(idlePower);
+                launch2.setPower(idlePower);
+                idlePower -= 0.0003;
+            }
+        }
         /*
         // TODO: aim-assist
         if (gamepad1.y) {
@@ -232,22 +293,5 @@ public class EllieTeleOpMode extends OpMode {
         telemetry.addData("Timer", servoTimer.milliseconds());
 
         telemetry.update();
-    }
-
-    private void increaseRPM() {
-        if (rpm < targetRPM) {
-            if (rpm < targetRPM - 250) {
-                launch1.setPower(1);
-                launch2.setPower(1);
-            } else {
-                launch1.setPower(idlePower);
-                launch2.setPower(idlePower);
-            }
-            idlePower += 0.0003;
-        } else {
-            launch1.setPower(idlePower);
-            launch2.setPower(idlePower);
-            idlePower -= 0.0003;
-        }
     }
 }
