@@ -14,8 +14,8 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 @Config
 @Autonomous(group = "ukdrive")
-public class AutoTest extends LinearOpMode {
-    Servo armSwivel;
+public class AutonomousOpMode extends LinearOpMode {
+    DcMotor  wobbleArm;
     Servo grabber;
     SampleMecanumDrive drive;
 
@@ -27,15 +27,17 @@ public class AutoTest extends LinearOpMode {
         drive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         drive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        armSwivel = hardwareMap.get(Servo.class, "Arm_Swivel");
-        grabber = hardwareMap.get(Servo.class, "Grabber");
+        wobbleArm = hardwareMap.get(DcMotor.class, "wobble");
+        grabber = hardwareMap.get(Servo.class, "gripper");
+
+        wobbleArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         Pose2d blueStart = new Pose2d(-63, 18, 0);
         Vector2d avoidRingsPoint = new Vector2d(-10, 24);
 
         final Vector2d square1 = new Vector2d(5, 62);
         final Vector2d square2 = new Vector2d(25, 32);
-        final Vector2d square3 = new Vector2d(45, 65);
+        final Vector2d square3 = new Vector2d(55, 40);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
                 .splineToConstantHeading(square1, Math.toRadians(90))
@@ -60,6 +62,8 @@ public class AutoTest extends LinearOpMode {
 
         waitForStart();
 
+        grabber.setPosition(0.55);
+
         while (opModeIsActive() && ringCount.getFrameCount() < 60) {
             sleep(100);
         }
@@ -69,17 +73,15 @@ public class AutoTest extends LinearOpMode {
         telemetry.addData("rings: ", numberOfRings);
         telemetry.update();
 
-        armSwivel.setPosition(1);
-
         switch (numberOfRings) {
             case 0:
                 drive.followTrajectory(trajectoryToSquare1);
-                afterRingCount(new Pose2d(-4, 55, 0), vectorToPose(square1, 0));
+               // afterRingCount(new Pose2d(-4, 55, 0), vectorToPose(square1, 0));
                 break;
 
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
-                afterRingCount(new Pose2d(25, 41, 0), vectorToPose(square2, 0));
+               // afterRingCount(new Pose2d(25, 41, 0), vectorToPose(square2, 0));
                 break;
 
             case 4:
@@ -115,16 +117,22 @@ public class AutoTest extends LinearOpMode {
                 .back(14)
                 .build();
         Trajectory parkOnLine = drive.trajectoryBuilder(reverseFromWobbles.end())
-                .strafeTo(new Vector2d(10, 20))
+                .strafeTo(new Vector2d(10, 30))
                 .build();
 
-        armSwivel.setPosition(0.8);
+        wobbleArm.setPower(.25);
+
+        sleep(1250);
+
+        grabber.setPosition(0);
 
         sleep(500);
 
-        grabber.setPosition(1);
+        wobbleArm.setPower(-.25);
 
         sleep(500);
+
+        /*
 
         drive.followTrajectory(backUp);
         drive.followTrajectory(navToSecondWobble);
@@ -141,6 +149,7 @@ public class AutoTest extends LinearOpMode {
         grabber.setPosition(1);
 
         sleep(500);
+        */
 
         drive.followTrajectory(reverseFromWobbles);
         drive.followTrajectory(parkOnLine);
@@ -148,5 +157,7 @@ public class AutoTest extends LinearOpMode {
 
     private Pose2d vectorToPose(Vector2d vector, int heading) {
         return new Pose2d(vector.getX(), vector.getY(), Math.toRadians(heading));
+
+
     }
 }
