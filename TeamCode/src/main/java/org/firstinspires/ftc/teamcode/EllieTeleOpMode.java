@@ -30,7 +30,7 @@ public class EllieTeleOpMode extends OpMode {
 
     int rpm;
     int targetRPM = 3800;
-    int targetPowerShotRPM = 3000;
+    int targetPowerShotRPM = 3050;
 
     boolean launcherEnable = false;
     boolean powershotEnable = false;

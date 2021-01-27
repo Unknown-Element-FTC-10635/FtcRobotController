@@ -74,7 +74,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
         final Vector2d square1 = new Vector2d(10, 40);
         final Vector2d square2 = new Vector2d(30, 15);
-        final Vector2d square3 = new Vector2d(55, 40);
+        final Vector2d square3 = new Vector2d(55, 42);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
                 .splineToConstantHeading(square1, Math.toRadians(90))
