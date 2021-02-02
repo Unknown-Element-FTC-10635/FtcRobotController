@@ -27,10 +27,12 @@ public class EllieTeleOpMode extends OpMode {
     private ElapsedTime optionsTimer = new ElapsedTime();
 
     private final Point RING_LAUNCH_POINT = new Point(320, 240);
+    private final int HIGH_GOAL_RPM = 3660;
+    private final int POWERSHOT_RPM = 3350;
 
     int rpm;
-    int targetRPM = 3800;
-    int targetPowerShotRPM = 3050;
+    int userAdjustedRPM = 0;
+    int targetRPM = HIGH_GOAL_RPM;
 
     boolean launcherEnable = false;
     boolean powershotEnable = false;
@@ -50,9 +52,13 @@ public class EllieTeleOpMode extends OpMode {
     private boolean intakeOff = true;
     private boolean intakeIn = true;
 
+    private int velocity = 0;
+
     double servoPosition = 0.5;
     int launcherState = -1;
     ElapsedTime servoTimer = new ElapsedTime();
+
+    private boolean lastRightBumperState = false;
 
     @Override
     public void init() {
@@ -72,8 +78,8 @@ public class EllieTeleOpMode extends OpMode {
 
         wobble.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        launch1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        launch2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        launch1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launch2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -115,15 +121,24 @@ public class EllieTeleOpMode extends OpMode {
         frontRight.setPower(-((gamepad1.left_stick_y + gamepad1.left_stick_x) + gamepad1.right_stick_x) * wheelMultiplier);
         backRight.setPower(-((gamepad1.left_stick_y - gamepad1.left_stick_x) + gamepad1.right_stick_x) * wheelMultiplier);
 
-        // Increase TargetRPM
-        if (gamepad1.right_bumper) {
-            targetRPM += 1;
+        if (lastRightBumperState && !gamepad1.right_bumper) {
+
+            userAdjustedRPM += 10;
+
         }
+        lastRightBumperState = gamepad1.right_bumper;
+
+        // Increase TargetRPM
+        //if (gamepad1.right_bumper) {
+        //    userAdjustedRPM += 1;
+        //}
 
         // Decrease TargetRPM
         if (gamepad1.left_bumper) {
-            targetRPM -= 1;
+            userAdjustedRPM -= 1;
         }
+
+        velocity = (targetRPM / 90) * 28;
 
         // Arm Up and Down
         wobble.setPower((gamepad1.left_trigger - gamepad1.right_trigger) * .5);
@@ -176,11 +191,13 @@ public class EllieTeleOpMode extends OpMode {
         // Powershot launcher
         if (gamepad1.a) {
             powershotEnable = true;
+            targetRPM = POWERSHOT_RPM + userAdjustedRPM;
             launcherState = 0;
         }
 
         // Enable launcher
         if (gamepad1.y) {
+            targetRPM = HIGH_GOAL_RPM + userAdjustedRPM;
             launcherState = 0;
         }
 
@@ -193,12 +210,13 @@ public class EllieTeleOpMode extends OpMode {
                 launcherEnable = true;
                 break;
             case 1:
-                if ((rpm + 250 > targetRPM) || (rpm + 250 > targetPowerShotRPM))
+                if (launch1.getVelocity() >= velocity) {
                     if (powershotEnable) {
                         launcherState = 8;
                     } else {
                         launcherState++;
                     }
+                }
                 break;
             case 2:
                 servoTimer.reset();
@@ -228,13 +246,19 @@ public class EllieTeleOpMode extends OpMode {
                 if (servoTimer.milliseconds() > 120) {//in time
                     launcherEnable = false;
                     powershotEnable = false;
-                    launch1.setPower(0);
-                    launch2.setPower(0);
+                    launch1.setVelocity(0);
+                    launch2.setVelocity(0);
                     launcherState++;
                 }
                 break;
         }
 
+        if (launcherEnable) {
+            launch1.setVelocity(velocity);
+            launch2.setVelocity(velocity);
+        }
+
+/*
         if (launcherEnable) {
             if (rpm < (powershotEnable ? targetPowerShotRPM : targetRPM)) {
                 if (rpm < (powershotEnable ? targetPowerShotRPM - 150 : targetRPM - 150)) {
@@ -250,7 +274,7 @@ public class EllieTeleOpMode extends OpMode {
                 launch2.setPower(idlePower);
                 idlePower -= 0.0003;
             }
-        }
+        } */
 
         /*
         // TODO: aim-assist
@@ -260,7 +284,8 @@ public class EllieTeleOpMode extends OpMode {
 
         telemetry.addData("Wheel multiplier:", wheelMultiplier);
         telemetry.addData("RPM:", rpm);
-        telemetry.addData("Target RPM", targetRPM);
+        telemetry.addData("High Goal RPM", HIGH_GOAL_RPM + userAdjustedRPM);
+        telemetry.addData("Power Shot RPM", POWERSHOT_RPM + userAdjustedRPM);
         telemetry.addData("Timer", servoTimer.milliseconds());
 
         telemetry.update();
