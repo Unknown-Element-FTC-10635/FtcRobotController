@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.drive;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.roadrunner.trajectory.constraints.DriveConstraints;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
@@ -57,7 +56,7 @@ public class DriveConstants {
 
     public static final double WHEEL_RADIUS = 1.88976;
     public static final double GEAR_RATIO = 1.09; // output (wheel) speed / input (motor) speed
-    public static double TRACK_WIDTH = 14.15;
+    public static double TRACK_WIDTH = 15;
 
     /*
      * These are the feedforward parameters used to model the drive motor behavior. If you are using
@@ -77,11 +76,11 @@ public class DriveConstants {
      * acceleration values are required, and the jerk values are optional (setting a jerk of 0.0
      * forces acceleration-limited profiling).
      */
-    public static DriveConstraints BASE_CONSTRAINTS = new DriveConstraints(
-            40.0, 30.0, 0.0,
-            2, 1, 0.0
-    );
 
+    public static double MAX_VEL = 40;
+    public static double MAX_ACCEL = 30;
+    public static double MAX_ANG_VEL = 4.953;
+    public static double MAX_ANG_ACCEL = 1;
 
     public static double encoderTicksToInches(double ticks) {
         return WHEEL_RADIUS * 2 * Math.PI * GEAR_RATIO * ticks / MOTOR_CONFIG.getTicksPerRev();

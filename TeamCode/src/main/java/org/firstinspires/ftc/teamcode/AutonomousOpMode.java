@@ -26,7 +26,7 @@ public class AutonomousOpMode extends LinearOpMode {
     ExpansionHubServo flicker, leftLinkage, rightLinkage;
 
     int rpm;
-    int targetRPM = 3800;
+    int targetRPM = 3600;
     int targetPowerShotRPM = 2900;
 
     boolean launcherEnable = false;
@@ -52,9 +52,6 @@ public class AutonomousOpMode extends LinearOpMode {
 
         drive = new SampleMecanumDrive(hardwareMap);
 
-        drive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        drive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
         wobbleArm = hardwareMap.get(DcMotor.class, "wobble");
         grabber = hardwareMap.get(Servo.class, "gripper");
 
@@ -77,15 +74,15 @@ public class AutonomousOpMode extends LinearOpMode {
         final Vector2d square3 = new Vector2d(55, 42);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
-                .splineToConstantHeading(square1, Math.toRadians(90))
+                .splineTo(square1, 0)
                 .build();
         final Trajectory trajectoryToSquare2 = drive.trajectoryBuilder(blueStart)
                 .lineTo(avoidRingsPoint)
-                .splineToConstantHeading(square2, Math.toRadians(90))
+                .splineTo(square2, 0)
                 .build();
         final Trajectory trajectoryToSquare3 = drive.trajectoryBuilder(blueStart)
                 .lineTo(avoidRingsPoint)
-                .splineToConstantHeading(square3, Math.toRadians(90))
+                .splineTo(square3, 0)
                 .build();
 
         final RingDetectionEasyOpenCV ringCount = new RingDetectionEasyOpenCV(hardwareMap, telemetry);
@@ -153,11 +150,11 @@ public class AutonomousOpMode extends LinearOpMode {
         Trajectory reverseFromWobbles = drive.trajectoryBuilder(currentSquare)
                 .back(15)
                 .build();
-        Trajectory parkbehindLine = drive.trajectoryBuilder(reverseFromWobbles.end())
-                .strafeTo(new Vector2d(-8, 38))
+        Trajectory firingPosition = drive.trajectoryBuilder(reverseFromWobbles.end())
+                .strafeTo(new Vector2d(-8, 34))
                 .build();
-        Trajectory parkOnLine = drive.trajectoryBuilder(parkbehindLine.end())
-                .strafeTo(new Vector2d(4, 38))
+        Trajectory parkOnLine = drive.trajectoryBuilder(firingPosition.end())
+                .strafeTo(new Vector2d(4, 34))
                 .build();
 
         wobbleArm.setPower(.1);
@@ -192,7 +189,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
         drive.followTrajectory(reverseFromWobbles);
         wobbleArm.setPower(0);
-        drive.followTrajectory(parkbehindLine);
+        drive.followTrajectory(firingPosition);
         launcherEnable = true;
         launcherState = 0;
 
