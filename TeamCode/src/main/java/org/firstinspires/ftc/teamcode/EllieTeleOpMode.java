@@ -99,7 +99,7 @@ public class EllieTeleOpMode extends OpMode {
     @Override
     public void loop() {
         // 7*4 ticks per rev, 1.5 gear ratio, 60 seconds
-        rpm = (int) (60 * (launch1.getVelocity() / 28.0) * 1.5);
+        rpm = (int) (60 * (launch2.getVelocity() / 28.0) * 1.5);
 
         // Enable and Disable Slowmode
         if (gamepad1.right_stick_button && r3Timer.milliseconds() > 250) {
@@ -200,7 +200,7 @@ public class EllieTeleOpMode extends OpMode {
                 launcherEnable = true;
                 break;
             case 1:
-                if (launch1.getVelocity() >= velocity) {
+                if (launch2.getVelocity() >= velocity) {
                     if (powershotEnable) {
                         launcherState = 8;
                     } else {
