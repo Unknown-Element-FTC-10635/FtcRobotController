@@ -40,6 +40,7 @@ public class EllieTeleOpMode extends OpMode {
     final double SERVO_IN = 0.292;
     final double LEFT_LINKAGE_IN = 0.27;
     final double LEFT_LINKAGE_OUT = 0.9064;
+
     final double RIGHT_LINKAGE_IN = 0.7084;
     final double RIGHT_LINKAGE_OUT = 0.0449;
     final double GRIPPER_CLOSED = 0.55;

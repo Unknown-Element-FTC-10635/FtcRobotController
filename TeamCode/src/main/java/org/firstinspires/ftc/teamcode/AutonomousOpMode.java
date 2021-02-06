@@ -173,7 +173,6 @@ public class AutonomousOpMode extends LinearOpMode {
         sleep(500);
 
         /*
-
         drive.followTrajectory(backUp);
         drive.followTrajectory(navToSecondWobble);
         //drive.followTrajectory(pickUpSecondWobble);
