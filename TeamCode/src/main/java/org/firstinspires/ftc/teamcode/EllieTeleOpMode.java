@@ -1,26 +1,27 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.opencv.core.Point;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.revextensions2.ExpansionHubMotor;
 import org.openftc.revextensions2.ExpansionHubServo;
 
 @TeleOp(name = "ukdrive")
 public class EllieTeleOpMode extends OpMode {
 
-    ExpansionHubMotor launch1, launch2, intake,  wobble;
+    ExpansionHubMotor launch1, launch2, intake, wobble;
     ExpansionHubServo flicker, leftLinkage, rightLinkage, gripper;
 
-    DcMotor frontLeft, frontRight, backLeft, backRight;
+    private double wheelMultiplier = 1;
 
-    private double wheelMultiplier;
-
-   // private AimAssistPipeline aimAssist;
+    // private AimAssistPipeline aimAssist;
+    SampleMecanumDrive drive;
 
     private ElapsedTime r3Timer = new ElapsedTime();
     private ElapsedTime bTimer = new ElapsedTime();
@@ -29,48 +30,40 @@ public class EllieTeleOpMode extends OpMode {
     private final int HIGH_GOAL_RPM = 3660;
     private final int POWERSHOT_RPM = 3350;
 
-    int rpm;
     int userAdjustedRPM = 0;
-    int targetRPM = HIGH_GOAL_RPM;
 
-    boolean launcherEnable = false;
-    boolean powershotEnable = false;
-
-    final double SERVO_OUT = 0.425;
-    final double SERVO_IN = 0.292;
     final double LEFT_LINKAGE_IN = 0.27;
     final double LEFT_LINKAGE_OUT = 0.9064;
-
     final double RIGHT_LINKAGE_IN = 0.7084;
     final double RIGHT_LINKAGE_OUT = 0.0449;
-    final double GRIPPER_CLOSED = 0.55;
+    final double GRIPPER_CLOSED = 0.35;
     final double GRIPPER_OPEN = 0;
 
     private boolean grabberOpen = false;
-    private boolean intakeReversed = false;
     private boolean intakeOff = true;
     private boolean intakeIn = true;
 
-    private int velocity = 0;
-
-    int launcherState = -1;
     ElapsedTime servoTimer = new ElapsedTime();
 
     private boolean lastRightBumperState = false;
     private boolean lastLeftBumperState = false;
 
+    Trajectory highGoal, powershot1, powershot2, powershot3;
+    Trajectory[] powershots = {powershot1, powershot2, powershot3};
+
+    RingLauncher ringLauncher;
+
     @Override
     public void init() {
-       // aimAssist = new AimAssistPipeline(hardwareMap);
-       // aimAssist.start();
+        drive = new SampleMecanumDrive(hardwareMap);
+        drive.setPoseEstimate(new Pose2d(12, 34, 0));
+        ringLauncher = new RingLauncher(hardwareMap);
+        // aimAssist = new AimAssistPipeline(hardwareMap);
+        // aimAssist.start();
 
         launch1 = hardwareMap.get(ExpansionHubMotor.class, "launch1");
         launch2 = hardwareMap.get(ExpansionHubMotor.class, "launch2");
         intake = hardwareMap.get(ExpansionHubMotor.class, "intake");
-        frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
-        backLeft = hardwareMap.get(DcMotor.class, "backLeft");
-        backRight = hardwareMap.get(DcMotor.class, "backRight");
-        frontRight = hardwareMap.get(DcMotor.class, "frontRight");
         wobble = hardwareMap.get(ExpansionHubMotor.class, "wobble");
 
         wobble.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -79,28 +72,32 @@ public class EllieTeleOpMode extends OpMode {
         launch2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         wobble.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         flicker = hardwareMap.get(ExpansionHubServo.class, "flicker");
         leftLinkage = hardwareMap.get(ExpansionHubServo.class, "leftLinkage");
         rightLinkage = hardwareMap.get(ExpansionHubServo.class, "rightLinkage");
         gripper = hardwareMap.get(ExpansionHubServo.class, "gripper");
 
-        wheelMultiplier = 1;
+        highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .splineTo(new Vector2d(-4, 34), 0)
+                .build();
+        powershot1 = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .lineTo(new Vector2d(-3, 18))
+                .build();
+        powershot2 = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .lineTo(new Vector2d(-3, 10))
+                .build();
+        powershot3 = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .lineTo(new Vector2d(-3, 3))
+                .build();
 
-        telemetry.addData("Init", "Complete");
+        telemetry.addLine("Init Complete");
         telemetry.update();
     }
 
     @Override
     public void loop() {
-        // 7*4 ticks per rev, 1.5 gear ratio, 60 seconds
-        rpm = (int) (60 * (launch2.getVelocity() / 28.0) * 1.5);
-
         // Enable and Disable Slowmode
         if (gamepad1.right_stick_button && r3Timer.milliseconds() > 250) {
             if (wheelMultiplier == 1) {
@@ -113,10 +110,14 @@ public class EllieTeleOpMode extends OpMode {
         }
 
         // Movement
-        frontLeft.setPower(((gamepad1.left_stick_y - gamepad1.left_stick_x) - gamepad1.right_stick_x) * wheelMultiplier);
-        backLeft.setPower(((gamepad1.left_stick_y + gamepad1.left_stick_x) - gamepad1.right_stick_x) * wheelMultiplier);
-        frontRight.setPower(-((gamepad1.left_stick_y + gamepad1.left_stick_x) + gamepad1.right_stick_x) * wheelMultiplier);
-        backRight.setPower(-((gamepad1.left_stick_y - gamepad1.left_stick_x) + gamepad1.right_stick_x) * wheelMultiplier);
+        drive.setWeightedDrivePower(
+                new Pose2d(
+                        -gamepad1.left_stick_y * wheelMultiplier,
+                        -gamepad1.left_stick_x * wheelMultiplier,
+                        -gamepad1.right_stick_x * wheelMultiplier
+                )
+        );
+        drive.update();
 
         if (lastRightBumperState && !gamepad1.right_bumper) {
             userAdjustedRPM += 10;
@@ -127,8 +128,6 @@ public class EllieTeleOpMode extends OpMode {
             userAdjustedRPM -= 10;
         }
         lastLeftBumperState = gamepad1.left_bumper;
-
-        velocity = (targetRPM / 90) * 28;
 
         // Arm Up and Down
         wobble.setPower((gamepad1.left_trigger - gamepad1.right_trigger) * .5);
@@ -180,72 +179,18 @@ public class EllieTeleOpMode extends OpMode {
 
         // Powershot launcher
         if (gamepad1.a) {
-            powershotEnable = true;
-            targetRPM = POWERSHOT_RPM + userAdjustedRPM;
-            launcherState = 0;
+            for (Trajectory i : powershots) {
+                drive.followTrajectory(i);
+                ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
+                ringLauncher.launch(1);
+            }
         }
 
         // Enable launcher
         if (gamepad1.y) {
-            targetRPM = HIGH_GOAL_RPM + userAdjustedRPM;
-            launcherState = 0;
-        }
-
-        // Launcher
-        switch (launcherState) {
-            case 0:
-                leftLinkage.setPosition(LEFT_LINKAGE_OUT);
-                rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
-                launcherState++;
-                launcherEnable = true;
-                break;
-            case 1:
-                if (launch2.getVelocity() >= velocity) {
-                    if (powershotEnable) {
-                        launcherState = 8;
-                    } else {
-                        launcherState++;
-                    }
-                }
-                break;
-            case 2:
-                servoTimer.reset();
-                launcherState++;
-                flicker.setPosition(SERVO_IN);
-                break;
-            case 3:
-            case 5:
-            case 7:
-            case 9:
-                if (servoTimer.milliseconds() > 120) {//in time
-                    servoTimer.reset();
-                    launcherState++;
-                    flicker.setPosition(SERVO_OUT);
-                }
-                break;
-            case 4:
-            case 6:
-            case 8:
-                if (servoTimer.milliseconds() > 120) {//out time
-                    servoTimer.reset();
-                    launcherState++;
-                    flicker.setPosition(SERVO_IN);
-                }
-                break;
-            case 10:
-                if (servoTimer.milliseconds() > 120) {//in time
-                    launcherEnable = false;
-                    powershotEnable = false;
-                    launch1.setVelocity(0);
-                    launch2.setVelocity(0);
-                    launcherState++;
-                }
-                break;
-        }
-
-        if (launcherEnable) {
-            launch1.setVelocity(velocity);
-            launch2.setVelocity(velocity);
+            drive.followTrajectory(highGoal);
+            ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
+            ringLauncher.launch(3);
         }
 
         /*
@@ -255,10 +200,11 @@ public class EllieTeleOpMode extends OpMode {
         } */
 
         telemetry.addData("Wheel multiplier:", wheelMultiplier);
-        telemetry.addData("RPM:", rpm);
+        telemetry.addData("RPM:", ringLauncher.getRPM());
         telemetry.addData("High Goal RPM", HIGH_GOAL_RPM + userAdjustedRPM);
         telemetry.addData("Power Shot RPM", POWERSHOT_RPM + userAdjustedRPM);
         telemetry.addData("Timer", servoTimer.milliseconds());
+        telemetry.addData("Servo:", gripper.getPosition());
 
         telemetry.update();
     }
