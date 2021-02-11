@@ -14,7 +14,6 @@ import org.openftc.revextensions2.ExpansionHubServo;
 
 @TeleOp(name = "ukdrive")
 public class EllieTeleOpMode extends OpMode {
-
     ExpansionHubMotor launch1, launch2, intake, wobble;
     ExpansionHubServo flicker, leftLinkage, rightLinkage, gripper;
 
@@ -48,8 +47,8 @@ public class EllieTeleOpMode extends OpMode {
     private boolean lastRightBumperState = false;
     private boolean lastLeftBumperState = false;
 
-    Trajectory highGoal, powershot1, powershot2, powershot3;
-    Trajectory[] powershots = {powershot1, powershot2, powershot3};
+    Trajectory highGoal;
+    Trajectory[] powershots = new Trajectory[3];
 
     RingLauncher ringLauncher;
 
@@ -79,19 +78,6 @@ public class EllieTeleOpMode extends OpMode {
         rightLinkage = hardwareMap.get(ExpansionHubServo.class, "rightLinkage");
         gripper = hardwareMap.get(ExpansionHubServo.class, "gripper");
 
-        highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .splineTo(new Vector2d(-4, 34), 0)
-                .build();
-        powershot1 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .lineTo(new Vector2d(-3, 18))
-                .build();
-        powershot2 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .lineTo(new Vector2d(-3, 10))
-                .build();
-        powershot3 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .lineTo(new Vector2d(-3, 3))
-                .build();
-
         telemetry.addLine("Init Complete");
         telemetry.update();
     }
@@ -118,7 +104,7 @@ public class EllieTeleOpMode extends OpMode {
                 )
         );
         drive.update();
-
+        
         if (lastRightBumperState && !gamepad1.right_bumper) {
             userAdjustedRPM += 10;
         }
@@ -179,6 +165,7 @@ public class EllieTeleOpMode extends OpMode {
 
         // Powershot launcher
         if (gamepad1.a) {
+            createPaths();
             for (Trajectory i : powershots) {
                 drive.followTrajectory(i);
                 ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
@@ -188,6 +175,7 @@ public class EllieTeleOpMode extends OpMode {
 
         // Enable launcher
         if (gamepad1.y) {
+            createPaths();
             drive.followTrajectory(highGoal);
             ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
             ringLauncher.launch(3);
@@ -207,5 +195,21 @@ public class EllieTeleOpMode extends OpMode {
         telemetry.addData("Servo:", gripper.getPosition());
 
         telemetry.update();
+    }
+
+    public void createPaths() {
+        highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .splineToLinearHeading(new Pose2d(-4, 34, 0), 0)
+                .build();
+        powershots[0] = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .splineTo(new Vector2d(-3, 18), 0)
+                .build();
+        powershots[1] = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .splineTo(new Vector2d(-3, 10), 0)
+                .build();
+        powershots[2] = drive.trajectoryBuilder(drive.getPoseEstimate())
+                .splineTo(new Vector2d(-3, 3), 0)
+                .build();
+
     }
 }
