@@ -47,10 +47,8 @@ public class EllieTeleOpMode extends OpMode {
     private boolean lastRightBumperState = false;
     private boolean lastLeftBumperState = false;
 
-    Trajectory highGoal;
-    Trajectory[] powershots = new Trajectory[3];
-
     RingLauncher ringLauncher;
+    private PowerShotFire powerShotFireState;
 
     @Override
     public void init() {
@@ -165,17 +163,44 @@ public class EllieTeleOpMode extends OpMode {
 
         // Powershot launcher
         if (gamepad1.a) {
-            createPaths();
-            for (Trajectory i : powershots) {
-                drive.followTrajectory(i);
-                ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
-                ringLauncher.launch(1);
-            }
+            powerShotFireState = PowerShotFire.FIRST_POSITION;
+        }
+
+        switch (powerShotFireState) {
+            case FIRST_POSITION:
+                Trajectory powershot = drive.trajectoryBuilder(drive.getPoseEstimate())
+                        .lineToLinearHeading(new Pose2d(-3, 18, 0))
+                        .build();
+
+                powerShotFire(powershot);
+                powerShotFireState = PowerShotFire.SECOND_POSITION;
+                break;
+
+            case SECOND_POSITION:
+                Trajectory powershot2 = drive.trajectoryBuilder(drive.getPoseEstimate())
+                        .lineToLinearHeading(new Pose2d(-3, 10))
+                        .build();
+
+                powerShotFire(powershot2);
+                powerShotFireState = PowerShotFire.THIRD_POSITION;
+                break;
+
+            case THIRD_POSITION:
+                Trajectory powershot3 = drive.trajectoryBuilder(drive.getPoseEstimate())
+                        .lineToLinearHeading(new Pose2d(-3, 3))
+                        .build();
+
+                powerShotFire(powershot3);
+                powerShotFireState = null;
+                break;
         }
 
         // Enable launcher
         if (gamepad1.y) {
-            createPaths();
+            Trajectory highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
+                    .lineToLinearHeading(new Pose2d(-4, 34, 0))
+                    .build();
+
             drive.followTrajectory(highGoal);
             ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
             ringLauncher.launch(3);
@@ -197,19 +222,10 @@ public class EllieTeleOpMode extends OpMode {
         telemetry.update();
     }
 
-    public void createPaths() {
-        highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .splineToLinearHeading(new Pose2d(-4, 34, 0), 0)
-                .build();
-        powershots[0] = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .splineTo(new Vector2d(-3, 18), 0)
-                .build();
-        powershots[1] = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .splineTo(new Vector2d(-3, 10), 0)
-                .build();
-        powershots[2] = drive.trajectoryBuilder(drive.getPoseEstimate())
-                .splineTo(new Vector2d(-3, 3), 0)
-                .build();
+    public void powerShotFire(Trajectory trajectory) {
+        drive.followTrajectory(trajectory);
+        ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
+        ringLauncher.launch(1);
 
     }
 }

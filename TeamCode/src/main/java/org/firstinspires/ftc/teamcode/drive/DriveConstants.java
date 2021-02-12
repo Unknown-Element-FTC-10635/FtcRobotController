@@ -77,7 +77,7 @@ public class DriveConstants {
      * forces acceleration-limited profiling).
      */
 
-    public static double MAX_VEL = 50;
+    public static double MAX_VEL = 60;
     public static double MAX_ACCEL = 30;
     public static double MAX_ANG_VEL = 4.953;
     public static double MAX_ANG_ACCEL = 1;
