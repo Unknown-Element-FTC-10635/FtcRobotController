@@ -5,16 +5,12 @@ import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
-import com.acmerobotics.roadrunner.trajectory.TrajectoryBuilder;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
-import org.openftc.revextensions2.ExpansionHubMotor;
-import org.openftc.revextensions2.ExpansionHubServo;
 
 @Config
 @Autonomous(group = "ukdrive")
@@ -59,7 +55,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
         final Vector2d square1 = new Vector2d(13, 50);
         final Vector2d square2 = new Vector2d(33, 25);
-        final Vector2d square3 = new Vector2d(55, 45);
+        final Vector2d square3 = new Vector2d(60, 45);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
                 .splineTo(square1, 0)
@@ -107,7 +103,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
-                afterRingCount(new Pose2d(27, 22, 0), vectorToPose(square2, 0), 1);
+                afterRingCount(new Pose2d(30, 18, 0), vectorToPose(square2, 0), 1);
                 break;
 
             case 4:
@@ -124,10 +120,10 @@ public class AutonomousOpMode extends LinearOpMode {
         Trajectory reverseFromWobbles = drive.trajectoryBuilder(currentSquare)
                 .back(15)
                 .build();
-        Trajectory firingPosition = drive.trajectoryBuilder(reverseFromWobbles.end())
+        Trajectory firingPosition = drive.trajectoryBuilder(currentSquare)
                 .lineToLinearHeading(new Pose2d(-5, 34, 0))
                 .build();
-        Trajectory powershot1 = drive.trajectoryBuilder(reverseFromWobbles.end())
+        Trajectory powershot1 = drive.trajectoryBuilder(currentSquare)
                 .lineTo(new Vector2d(-3, 18))
                 .build();
         /*Trajectory powershot2 = drive.trajectoryBuilder(powershot1.end())
@@ -140,16 +136,16 @@ public class AutonomousOpMode extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(-50, 25, 0))
                 .build();
         Trajectory strefeLeft = drive.trajectoryBuilder(secondWobble.end())
-                .strafeLeft(8)
+                .strafeLeft(10)
                 .build();
         Trajectory forward = drive.trajectoryBuilder(strefeLeft.end())
-                .forward(15)
+                .forward(17)
                 .build();
         Trajectory back = drive.trajectoryBuilder(forward.end())
                 .back(5)
                 .build();
         Trajectory intakeCollection = drive.trajectoryBuilder(back.end())
-                .forward(25)
+                .forward(20)
                 .build();
         Trajectory getAwayFromRings = drive.trajectoryBuilder(intakeCollection.end())
                 .strafeRight(20)
@@ -176,7 +172,7 @@ public class AutonomousOpMode extends LinearOpMode {
         //sleep(100);
 
         wobbleArm.setTargetPosition(0);
-        drive.followTrajectory(reverseFromWobbles);
+       // drive.followTrajectory(reverseFromWobbles);
 
         drive.followTrajectory(firingPosition);
         ringLauncher.setTargetRPM(targetRPM);
@@ -209,13 +205,20 @@ public class AutonomousOpMode extends LinearOpMode {
 
         drive.followTrajectory(strefeLeft);
 
-        grabber.setPosition(.35);
+        grabber.setPosition(.4);
+
+        sleep(1000);
 
         if (rings == 4) {
             leftLinkage.setPosition(LEFT_LINKAGE_RAISED);
             rightLinkage.setPosition(RIGHT_LINKAGE_RAISED);
 
-            drive.followTrajectory(forward);
+            //drive.followTrajectory(forward);
+
+            drive.setMotorPowers(0.2, 0.2, 0.2, 0.2);
+            sleep(250);
+            drive.setMotorPowers(0, 0, 0, 0);
+
             drive.followTrajectory(back);
 
             leftLinkage.setPosition(LEFT_LINKAGE_OUT);
@@ -233,6 +236,8 @@ public class AutonomousOpMode extends LinearOpMode {
         }
         drive.followTrajectory(dropOffSecondWobble);
         grabber.setPosition(0);
+
+        sleep(100);
 
         wobbleArm.setTargetPosition(0);
         drive.followTrajectory(getAwayFromSecondWobble);
