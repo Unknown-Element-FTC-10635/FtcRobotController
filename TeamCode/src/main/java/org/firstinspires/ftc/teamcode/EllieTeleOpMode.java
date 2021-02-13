@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-import android.text.method.HideReturnsTransformationMethod;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -120,6 +117,7 @@ public class EllieTeleOpMode extends OpMode {
         }
         lastLeftBumperState = gamepad1.left_bumper;
 
+        /*
         if (lastSquareState && !gamepad1.x) {
             if (userFire) {
                 userFire = false;
@@ -127,7 +125,7 @@ public class EllieTeleOpMode extends OpMode {
                 userFire = true;
             }
         }
-        lastSquareState = gamepad1.x;
+        lastSquareState = gamepad1.x; */
 
         // Arm Up and Down
         wobble.setPower((gamepad1.left_trigger - gamepad1.right_trigger) * .5);
@@ -238,9 +236,10 @@ public class EllieTeleOpMode extends OpMode {
             } */
         }
 
+        /*
         if (gamepad1.dpad_right) {
             drive.setPoseEstimate(new Pose2d(-63, 63, 0));
-        }
+        } */
 
         /*
         // TODO: aim-assist

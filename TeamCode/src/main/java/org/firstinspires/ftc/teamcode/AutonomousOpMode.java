@@ -102,17 +102,17 @@ public class AutonomousOpMode extends LinearOpMode {
         switch (numberOfRings) {
             case 0:
                 drive.followTrajectory(trajectoryToSquare1);
-                afterRingCount(new Pose2d(10, 45, 0), square1, 0);
+                afterRingCount(new Pose2d(10, 45, 0), vectorToPose(square1, 0), 0);
                 break;
 
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
-                afterRingCount(new Pose2d(27, 22, 0), square2, 1);
+                afterRingCount(new Pose2d(27, 22, 0), vectorToPose(square2, 0), 1);
                 break;
 
             case 4:
                 drive.followTrajectory(trajectoryToSquare3);
-                afterRingCount(vectorToPose(square3, 0), square3, 4);
+                afterRingCount(new Pose2d(50, 45, 0), vectorToPose(square3, 0), 4);
                 break;
         }
 
@@ -120,12 +120,12 @@ public class AutonomousOpMode extends LinearOpMode {
 
     }
 
-    private void afterRingCount(Pose2d destination, Vector2d currentSquare, int rings) {
-        Trajectory reverseFromWobbles = drive.trajectoryBuilder(vectorToPose(currentSquare, 0))
+    private void afterRingCount(Pose2d destination, Pose2d currentSquare, int rings) {
+        Trajectory reverseFromWobbles = drive.trajectoryBuilder(currentSquare)
                 .back(15)
                 .build();
         Trajectory firingPosition = drive.trajectoryBuilder(reverseFromWobbles.end())
-                .splineToLinearHeading(new Pose2d(-5, 34, 0), 0)
+                .lineToLinearHeading(new Pose2d(-5, 34, 0))
                 .build();
         Trajectory powershot1 = drive.trajectoryBuilder(reverseFromWobbles.end())
                 .lineTo(new Vector2d(-3, 18))
@@ -152,7 +152,7 @@ public class AutonomousOpMode extends LinearOpMode {
                 .forward(25)
                 .build();
         Trajectory getAwayFromRings = drive.trajectoryBuilder(intakeCollection.end())
-                .strafeRight(25)
+                .strafeRight(20)
                 .build();
         Trajectory dropOffSecondWobble = drive.trajectoryBuilder(getAwayFromRings.end())
                 .lineToLinearHeading(destination)
@@ -160,18 +160,20 @@ public class AutonomousOpMode extends LinearOpMode {
         Trajectory getAwayFromSecondWobble = drive.trajectoryBuilder(dropOffSecondWobble.end())
                 .strafeRight(5)
                 .build();
-
+        Trajectory firingPositionAfterSecondWobble = drive.trajectoryBuilder(getAwayFromSecondWobble.end())
+                .lineToLinearHeading(new Pose2d(-5, 34, 0))
+                .build();
         Trajectory parkOnLine = drive.trajectoryBuilder(firingPosition.end())
-                .strafeTo(new Vector2d(12, 34))
+                .lineToLinearHeading(new Pose2d(12, 34))
                 .build();
 
 //        wobbleArm.setTargetPosition(rotateToOpened);
 //        wobbleArm.setPower(0.3);
 //        wobbleArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        while (wobbleArm.getCurrentPosition() < ROTATE_OPEN - 20) {}
+        // while (wobbleArm.getCurrentPosition() < ROTATE_OPEN - 20) {}
 
         grabber.setPosition(0);
-        sleep(100);
+        //sleep(100);
 
         wobbleArm.setTargetPosition(0);
         drive.followTrajectory(reverseFromWobbles);
@@ -232,19 +234,16 @@ public class AutonomousOpMode extends LinearOpMode {
         drive.followTrajectory(dropOffSecondWobble);
         grabber.setPosition(0);
 
-        sleep(500);
-
         wobbleArm.setTargetPosition(0);
         drive.followTrajectory(getAwayFromSecondWobble);
-        drive.followTrajectory(reverseFromWobbles);
 
         if (rings == 1 || rings == 4) {
-            drive.followTrajectory(firingPosition);
+            drive.followTrajectory(firingPositionAfterSecondWobble);
             ringLauncher.setTargetRPM(targetRPM);
             ringLauncher.launch(3);
         }
 
-        //drive.followTrajectory(parkOnLine);
+        drive.followTrajectory(parkOnLine);
 
     }
 
