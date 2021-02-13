@@ -3,6 +3,8 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -26,8 +28,8 @@ public class RingLauncher {
         rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
         flicker = hardwareMap.get(Servo.class, "flicker");
 
-        launch1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        launch2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        launch2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(140, 10, 0, 0));
+        launch1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(140, 10, 0, 0));
     }
 
     public void launch(int rings) {

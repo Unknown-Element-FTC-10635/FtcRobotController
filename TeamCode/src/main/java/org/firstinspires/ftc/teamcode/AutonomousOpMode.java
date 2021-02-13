@@ -25,7 +25,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
     RingLauncher ringLauncher;
 
-    int targetRPM = 3660;
+    int targetRPM = 3600;
 
     final double LEFT_LINKAGE_OUT = 0.9064;
     final double RIGHT_LINKAGE_OUT = 0.0449;
@@ -57,8 +57,8 @@ public class AutonomousOpMode extends LinearOpMode {
         Pose2d blueStart = new Pose2d(-63, 18, 0);
         Vector2d avoidRingsPoint = new Vector2d(-10, 24);
 
-        final Vector2d square1 = new Vector2d(10, 45);
-        final Vector2d square2 = new Vector2d(30, 20);
+        final Vector2d square1 = new Vector2d(13, 50);
+        final Vector2d square2 = new Vector2d(33, 25);
         final Vector2d square3 = new Vector2d(55, 45);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
@@ -84,7 +84,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
         waitForStart();
 
-        grabber.setPosition(0.35);
+        grabber.setPosition(0.4);
 
         while (opModeIsActive() && ringCount.getFrameCount() < 60) {
             sleep(100);
@@ -102,17 +102,17 @@ public class AutonomousOpMode extends LinearOpMode {
         switch (numberOfRings) {
             case 0:
                 drive.followTrajectory(trajectoryToSquare1);
-                afterRingCount(new Pose2d(-4, 55, 0), square1);
+                afterRingCount(new Pose2d(10, 45, 0), square1, 0);
                 break;
 
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
-                afterRingCount(new Pose2d(25, 41, 0), square2);
+                afterRingCount(new Pose2d(27, 22, 0), square2, 1);
                 break;
 
             case 4:
                 drive.followTrajectory(trajectoryToSquare3);
-                afterRingCount(vectorToPose(square3, 0), square3);
+                afterRingCount(vectorToPose(square3, 0), square3, 4);
                 break;
         }
 
@@ -120,12 +120,12 @@ public class AutonomousOpMode extends LinearOpMode {
 
     }
 
-    private void afterRingCount(Pose2d destination, Vector2d currentSquare) {
+    private void afterRingCount(Pose2d destination, Vector2d currentSquare, int rings) {
         Trajectory reverseFromWobbles = drive.trajectoryBuilder(vectorToPose(currentSquare, 0))
                 .back(15)
                 .build();
         Trajectory firingPosition = drive.trajectoryBuilder(reverseFromWobbles.end())
-                .strafeTo(new Vector2d(-3, 34))
+                .splineToLinearHeading(new Pose2d(-5, 34, 0), 0)
                 .build();
         Trajectory powershot1 = drive.trajectoryBuilder(reverseFromWobbles.end())
                 .lineTo(new Vector2d(-3, 18))
@@ -137,7 +137,7 @@ public class AutonomousOpMode extends LinearOpMode {
                 .lineTo(new Vector2d(-3, 3))
                 .build();*/
         Trajectory secondWobble = drive.trajectoryBuilder(powershot1.end(), true)
-                .splineToConstantHeading(new Vector2d(-50, 25), 0)
+                .lineToLinearHeading(new Pose2d(-50, 25, 0))
                 .build();
         Trajectory strefeLeft = drive.trajectoryBuilder(secondWobble.end())
                 .strafeLeft(8)
@@ -154,8 +154,14 @@ public class AutonomousOpMode extends LinearOpMode {
         Trajectory getAwayFromRings = drive.trajectoryBuilder(intakeCollection.end())
                 .strafeRight(25)
                 .build();
+        Trajectory dropOffSecondWobble = drive.trajectoryBuilder(getAwayFromRings.end())
+                .lineToLinearHeading(destination)
+                .build();
+        Trajectory getAwayFromSecondWobble = drive.trajectoryBuilder(dropOffSecondWobble.end())
+                .strafeRight(5)
+                .build();
 
-        Trajectory parkOnLine = drive.trajectoryBuilder(reverseFromWobbles.end())
+        Trajectory parkOnLine = drive.trajectoryBuilder(firingPosition.end())
                 .strafeTo(new Vector2d(12, 34))
                 .build();
 
@@ -193,37 +199,52 @@ public class AutonomousOpMode extends LinearOpMode {
         ringLauncher.setTargetRPM(targetRPM);
         ringLauncher.launch(1); */
 
-        drive.followTrajectory(secondWobble);
-
         wobbleArm.setPower(.35);
         wobbleArm.setTargetPosition(ROTATE_OPEN);
         wobbleArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while (wobbleArm.getCurrentPosition() < ROTATE_OPEN - 20) {}
+        drive.followTrajectory(secondWobble);
 
         drive.followTrajectory(strefeLeft);
 
         grabber.setPosition(.35);
-        leftLinkage.setPosition(LEFT_LINKAGE_RAISED);
-        rightLinkage.setPosition(RIGHT_LINKAGE_RAISED);
 
-        drive.followTrajectory(forward);
-        drive.followTrajectory(back);
+        if (rings == 4) {
+            leftLinkage.setPosition(LEFT_LINKAGE_RAISED);
+            rightLinkage.setPosition(RIGHT_LINKAGE_RAISED);
 
-        leftLinkage.setPosition(LEFT_LINKAGE_OUT);
-        rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
+            drive.followTrajectory(forward);
+            drive.followTrajectory(back);
 
-        intake.setPower(1);
+            leftLinkage.setPosition(LEFT_LINKAGE_OUT);
+            rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
 
-        drive.followTrajectory(intakeCollection);
+        }
 
-        drive.followTrajectory(getAwayFromRings);
-        drive.followTrajectory(drive.trajectoryBuilder(getAwayFromRings.end()).strafeTo(currentSquare).build());
+        if (rings == 4 || rings == 1) {
+            intake.setPower(1);
+
+            drive.followTrajectory(intakeCollection);
+
+            drive.followTrajectory(getAwayFromRings);
+
+        }
+        drive.followTrajectory(dropOffSecondWobble);
         grabber.setPosition(0);
+
+        sleep(500);
+
         wobbleArm.setTargetPosition(0);
+        drive.followTrajectory(getAwayFromSecondWobble);
         drive.followTrajectory(reverseFromWobbles);
 
-        drive.followTrajectory(parkOnLine);
+        if (rings == 1 || rings == 4) {
+            drive.followTrajectory(firingPosition);
+            ringLauncher.setTargetRPM(targetRPM);
+            ringLauncher.launch(3);
+        }
+
+        //drive.followTrajectory(parkOnLine);
 
     }
 

@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
+import android.text.method.HideReturnsTransformationMethod;
+
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
@@ -26,8 +28,8 @@ public class EllieTeleOpMode extends OpMode {
     private ElapsedTime bTimer = new ElapsedTime();
     private ElapsedTime optionsTimer = new ElapsedTime();
 
-    private final int HIGH_GOAL_RPM = 3660;
-    private final int POWERSHOT_RPM = 3350;
+    private final int HIGH_GOAL_RPM = 3600;
+    private final int POWERSHOT_RPM = 3400;
 
     int userAdjustedRPM = 0;
 
@@ -35,7 +37,7 @@ public class EllieTeleOpMode extends OpMode {
     final double LEFT_LINKAGE_OUT = 0.9064;
     final double RIGHT_LINKAGE_IN = 0.7084;
     final double RIGHT_LINKAGE_OUT = 0.0449;
-    final double GRIPPER_CLOSED = 0.35;
+    final double GRIPPER_CLOSED = 0.4;
     final double GRIPPER_OPEN = 0;
 
     private boolean grabberOpen = false;
@@ -46,14 +48,19 @@ public class EllieTeleOpMode extends OpMode {
 
     private boolean lastRightBumperState = false;
     private boolean lastLeftBumperState = false;
+    private boolean lastSquareState = false;
+
+    boolean userFire = true;
 
     RingLauncher ringLauncher;
-    private PowerShotFire powerShotFireState;
+    private PowerShotFire powerShotFireState = PowerShotFire.STOPPED;
 
     @Override
     public void init() {
         drive = new SampleMecanumDrive(hardwareMap);
         drive.setPoseEstimate(new Pose2d(12, 34, 0));
+        //drive.setPoseEstimate(new Pose2d(-63, 18, 0));
+
         ringLauncher = new RingLauncher(hardwareMap);
         // aimAssist = new AimAssistPipeline(hardwareMap);
         // aimAssist.start();
@@ -113,6 +120,15 @@ public class EllieTeleOpMode extends OpMode {
         }
         lastLeftBumperState = gamepad1.left_bumper;
 
+        if (lastSquareState && !gamepad1.x) {
+            if (userFire) {
+                userFire = false;
+            } else {
+                userFire = true;
+            }
+        }
+        lastSquareState = gamepad1.x;
+
         // Arm Up and Down
         wobble.setPower((gamepad1.left_trigger - gamepad1.right_trigger) * .5);
 
@@ -163,13 +179,18 @@ public class EllieTeleOpMode extends OpMode {
 
         // Powershot launcher
         if (gamepad1.a) {
-            powerShotFireState = PowerShotFire.FIRST_POSITION;
+            if (userFire) {
+                ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
+                ringLauncher.launch(1);
+            } else {
+                powerShotFireState = PowerShotFire.FIRST_POSITION;
+            }
         }
 
         switch (powerShotFireState) {
             case FIRST_POSITION:
                 Trajectory powershot = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-3, 18, 0))
+                        .lineToLinearHeading(new Pose2d(-3, 15, 0))
                         .build();
 
                 powerShotFire(powershot);
@@ -178,7 +199,7 @@ public class EllieTeleOpMode extends OpMode {
 
             case SECOND_POSITION:
                 Trajectory powershot2 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-3, 10))
+                        .lineToLinearHeading(new Pose2d(-3, 9, 0))
                         .build();
 
                 powerShotFire(powershot2);
@@ -187,23 +208,38 @@ public class EllieTeleOpMode extends OpMode {
 
             case THIRD_POSITION:
                 Trajectory powershot3 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-3, 3))
+                        .lineToLinearHeading(new Pose2d(-3, 2, 0))
                         .build();
 
                 powerShotFire(powershot3);
-                powerShotFireState = null;
+                powerShotFireState = PowerShotFire.STOPPED;
+                break;
+
+            case STOPPED:
                 break;
         }
 
         // Enable launcher
         if (gamepad1.y) {
-            Trajectory highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
-                    .lineToLinearHeading(new Pose2d(-4, 34, 0))
-                    .build();
-
-            drive.followTrajectory(highGoal);
             ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
             ringLauncher.launch(3);
+            /*
+            if (userFire) {
+                ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
+                ringLauncher.launch(3);
+            } else {
+                Trajectory highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
+                        .lineToLinearHeading(new Pose2d(-4, 38, 0))
+                        .build();
+
+                drive.followTrajectory(highGoal);
+                ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
+                ringLauncher.launch(3);
+            } */
+        }
+
+        if (gamepad1.dpad_right) {
+            drive.setPoseEstimate(new Pose2d(-63, 63, 0));
         }
 
         /*
@@ -218,13 +254,14 @@ public class EllieTeleOpMode extends OpMode {
         telemetry.addData("Power Shot RPM", POWERSHOT_RPM + userAdjustedRPM);
         telemetry.addData("Timer", servoTimer.milliseconds());
         telemetry.addData("Servo:", gripper.getPosition());
+        telemetry.addData("MANUAL", userFire);
 
         telemetry.update();
     }
 
     public void powerShotFire(Trajectory trajectory) {
         drive.followTrajectory(trajectory);
-        ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
+        ringLauncher.setTargetRPM(POWERSHOT_RPM);
         ringLauncher.launch(1);
 
     }
