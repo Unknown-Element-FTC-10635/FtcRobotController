@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.revextensions2.ExpansionHubMotor;
 import org.openftc.revextensions2.ExpansionHubServo;
@@ -49,6 +50,10 @@ public class EllieTeleOpMode extends OpMode {
 
     boolean userFire = true;
 
+    double intakeCurrentDraw = 0;
+    double currentThreshold = 3000;
+    double intakeNormalSpeed = 0.45;
+
     RingLauncher ringLauncher;
     private PowerShotFire powerShotFireState = PowerShotFire.STOPPED;
 
@@ -86,6 +91,13 @@ public class EllieTeleOpMode extends OpMode {
 
     @Override
     public void loop() {
+        intakeCurrentDraw = intake.getCurrent(CurrentUnit.MILLIAMPS);
+        if (intakeCurrentDraw > currentThreshold && intake.getPower() > 0.4 && intake.getPower() < 0.9) {
+            intake.setPower(1);
+        } else if (intakeCurrentDraw < currentThreshold && intake.getPower() > 0.9) {
+            intake.setPower(intakeNormalSpeed);
+        }
+
         // Enable and Disable Slowmode
         if (gamepad1.right_stick_button && r3Timer.milliseconds() > 250) {
             if (wheelMultiplier == 1) {

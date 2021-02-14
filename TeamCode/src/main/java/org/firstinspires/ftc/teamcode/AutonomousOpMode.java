@@ -231,7 +231,7 @@ public class AutonomousOpMode extends LinearOpMode {
         }
 
         if (rings == 4 || rings == 1) {
-            intake.setPower(1);
+            intake.setPower(0.6);
 
             drive.followTrajectory(intakeCollection);
 
