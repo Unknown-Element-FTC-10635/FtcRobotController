@@ -10,12 +10,14 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
+import org.openftc.revextensions2.ExpansionHubMotor;
 
 @Config
 @Autonomous(group = "ukdrive")
 public class AutonomousOpMode extends LinearOpMode {
-    DcMotor wobbleArm, intake;
+    ExpansionHubMotor wobbleArm, intake;
     Servo grabber, leftLinkage, rightLinkage;
     SampleMecanumDrive drive;
 
@@ -31,6 +33,10 @@ public class AutonomousOpMode extends LinearOpMode {
 
     final int ROTATE_OPEN = 800;
 
+    double intakeCurrentDraw = 0;
+    double currentThreshold = 3000;
+    double intakeNormalSpeed = 0.45;
+
     @Override
     public void runOpMode() {
         FtcDashboard.start();
@@ -39,9 +45,9 @@ public class AutonomousOpMode extends LinearOpMode {
 
         drive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        wobbleArm = hardwareMap.get(DcMotor.class, "wobble");
+        wobbleArm = hardwareMap.get(ExpansionHubMotor.class, "wobble");
         grabber = hardwareMap.get(Servo.class, "gripper");
-        intake = hardwareMap.get(DcMotor.class, "intake");
+        intake = hardwareMap.get(ExpansionHubMotor.class, "intake");
 
         leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
         rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
@@ -231,9 +237,17 @@ public class AutonomousOpMode extends LinearOpMode {
         }
 
         if (rings == 4 || rings == 1) {
-            intake.setPower(0.6);
+            intake.setPower(1);
+            drive.followTrajectoryAsync(intakeCollection);
 
-            drive.followTrajectory(intakeCollection);
+            while (drive.isBusy()) {
+                intakeCurrentDraw = intake.getCurrent(CurrentUnit.MILLIAMPS);
+                if (intakeCurrentDraw > currentThreshold && intake.getPower() > 0.4 && intake.getPower() < 0.9) {
+                    intake.setPower(1);
+                } else if (intakeCurrentDraw < currentThreshold && intake.getPower() > 0.9) {
+                    intake.setPower(intakeNormalSpeed);
+                }
+            }
 
             drive.followTrajectory(getAwayFromRings);
 

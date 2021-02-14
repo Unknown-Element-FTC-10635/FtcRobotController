@@ -5,6 +5,7 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
@@ -52,7 +53,7 @@ public class EllieTeleOpMode extends OpMode {
 
     double intakeCurrentDraw = 0;
     double currentThreshold = 3000;
-    double intakeNormalSpeed = 0.45;
+    double intakeNormalSpeed = 0.65;
 
     RingLauncher ringLauncher;
     private PowerShotFire powerShotFireState = PowerShotFire.STOPPED;
@@ -248,10 +249,10 @@ public class EllieTeleOpMode extends OpMode {
             } */
         }
 
-        /*
+
         if (gamepad1.dpad_right) {
-            drive.setPoseEstimate(new Pose2d(-63, 63, 0));
-        } */
+            flicker.setPosition(-0.6);
+        }
 
         /*
         // TODO: aim-assist
