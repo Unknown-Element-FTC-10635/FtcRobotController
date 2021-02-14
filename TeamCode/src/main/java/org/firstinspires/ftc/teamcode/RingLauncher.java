@@ -78,6 +78,11 @@ public class RingLauncher {
 
     }
 
+    public void spinUpFlyWheel () {
+        launch1.setVelocity(targetVelocity);
+        launch2.setVelocity(targetVelocity);
+    }
+
     public void setTargetRPM(int targetRPM) {
         this.targetRPM = targetRPM;
     }

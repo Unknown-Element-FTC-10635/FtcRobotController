@@ -170,7 +170,7 @@ public class AutonomousOpMode extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(-5, 34, 0))
                 .build();
         Trajectory parkOnLine = drive.trajectoryBuilder(firingPosition.end())
-                .lineToLinearHeading(new Pose2d(6, 34))
+                .lineToLinearHeading(new Pose2d(4, 34))
                 .build();
 
 //        wobbleArm.setTargetPosition(rotateToOpened);
@@ -273,8 +273,9 @@ public class AutonomousOpMode extends LinearOpMode {
         wobbleArm.setTargetPosition(0);
 
         if (rings == 1 || rings == 4) {
-            drive.followTrajectory(firingPositionAfterSecondWobble);
             ringLauncher.setTargetRPM(targetRPM);
+            ringLauncher.spinUpFlyWheel();
+            drive.followTrajectory(firingPositionAfterSecondWobble);
             ringLauncher.launch(3);
         }
 
