@@ -31,12 +31,13 @@ public class AutonomousOpMode extends LinearOpMode {
 
     final int ROTATE_OPEN = 800;
 
-
     @Override
     public void runOpMode() {
         FtcDashboard.start();
         drive = new SampleMecanumDrive(hardwareMap);
         ringLauncher = new RingLauncher(hardwareMap);
+
+        drive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         wobbleArm = hardwareMap.get(DcMotor.class, "wobble");
         grabber = hardwareMap.get(Servo.class, "gripper");
@@ -108,7 +109,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
             case 4:
                 drive.followTrajectory(trajectoryToSquare3);
-                afterRingCount(new Pose2d(50, 45, 0), vectorToPose(square3, 0), 4);
+                afterRingCount(new Pose2d(55, 42, 0), vectorToPose(square3, 0), 4);
                 break;
         }
 
@@ -156,11 +157,14 @@ public class AutonomousOpMode extends LinearOpMode {
         Trajectory getAwayFromSecondWobble = drive.trajectoryBuilder(dropOffSecondWobble.end())
                 .strafeRight(5)
                 .build();
+        Trajectory getAwayFromSecondWobbleFirstPosition = drive.trajectoryBuilder(dropOffSecondWobble.end())
+                .strafeRight(20)
+                .build();
         Trajectory firingPositionAfterSecondWobble = drive.trajectoryBuilder(getAwayFromSecondWobble.end())
                 .lineToLinearHeading(new Pose2d(-5, 34, 0))
                 .build();
         Trajectory parkOnLine = drive.trajectoryBuilder(firingPosition.end())
-                .lineToLinearHeading(new Pose2d(12, 34))
+                .lineToLinearHeading(new Pose2d(6, 34))
                 .build();
 
 //        wobbleArm.setTargetPosition(rotateToOpened);
@@ -237,10 +241,15 @@ public class AutonomousOpMode extends LinearOpMode {
         drive.followTrajectory(dropOffSecondWobble);
         grabber.setPosition(0);
 
-        sleep(100);
+        sleep(200);
 
-        wobbleArm.setTargetPosition(0);
+        wobbleArm.setTargetPosition(600);
         drive.followTrajectory(getAwayFromSecondWobble);
+
+        if (rings == 0) {
+            drive.followTrajectory(getAwayFromSecondWobbleFirstPosition);
+        }
+        wobbleArm.setTargetPosition(0);
 
         if (rings == 1 || rings == 4) {
             drive.followTrajectory(firingPositionAfterSecondWobble);
