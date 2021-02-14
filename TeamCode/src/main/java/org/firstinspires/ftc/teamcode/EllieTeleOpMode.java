@@ -190,6 +190,7 @@ public class EllieTeleOpMode extends OpMode {
 
         // Powershot launcher
         if (gamepad1.a) {
+            drive.setMotorPowers(0, 0, 0,0);
             if (userFire) {
                 ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
                 ringLauncher.launch(1);
@@ -232,6 +233,7 @@ public class EllieTeleOpMode extends OpMode {
 
         // Enable launcher
         if (gamepad1.y) {
+            drive.setMotorPowers(0, 0, 0, 0);
             ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
             ringLauncher.launch(3);
             /*

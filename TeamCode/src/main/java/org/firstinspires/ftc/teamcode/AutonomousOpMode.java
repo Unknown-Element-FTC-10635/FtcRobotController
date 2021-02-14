@@ -181,6 +181,7 @@ public class AutonomousOpMode extends LinearOpMode {
         grabber.setPosition(0);
         //sleep(100);
 
+        wobbleArm.setPower(0.4);
         wobbleArm.setTargetPosition(0);
        // drive.followTrajectory(reverseFromWobbles);
 
@@ -241,18 +242,24 @@ public class AutonomousOpMode extends LinearOpMode {
             drive.followTrajectoryAsync(intakeCollection);
 
             while (drive.isBusy()) {
-                intakeCurrentDraw = intake.getCurrent(CurrentUnit.MILLIAMPS);
-                if (intakeCurrentDraw > currentThreshold && intake.getPower() > 0.4 && intake.getPower() < 0.9) {
-                    intake.setPower(1);
-                } else if (intakeCurrentDraw < currentThreshold && intake.getPower() > 0.9) {
-                    intake.setPower(intakeNormalSpeed);
-                }
+                adjustVoltage();
+                drive.update();
             }
 
-            drive.followTrajectory(getAwayFromRings);
+            drive.followTrajectoryAsync(getAwayFromRings);
 
+            while (drive.isBusy()) {
+                adjustVoltage();
+                drive.update();
+            }
         }
-        drive.followTrajectory(dropOffSecondWobble);
+        drive.followTrajectoryAsync(dropOffSecondWobble);
+
+        while (drive.isBusy()) {
+            adjustVoltage();
+            drive.update();
+        }
+
         grabber.setPosition(0);
 
         sleep(200);
@@ -277,7 +284,14 @@ public class AutonomousOpMode extends LinearOpMode {
 
     private Pose2d vectorToPose(Vector2d vector, int heading) {
         return new Pose2d(vector.getX(), vector.getY(), Math.toRadians(heading));
+    }
 
-
+    private void adjustVoltage() {
+        intakeCurrentDraw = intake.getCurrent(CurrentUnit.MILLIAMPS);
+        if (intakeCurrentDraw > currentThreshold && intake.getPower() > 0.4 && intake.getPower() < 0.9) {
+            intake.setPower(1);
+        } else if (intakeCurrentDraw < currentThreshold && intake.getPower() > 0.9) {
+            intake.setPower(intakeNormalSpeed);
+        }
     }
 }
