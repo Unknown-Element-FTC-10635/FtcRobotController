@@ -13,6 +13,13 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.revextensions2.ExpansionHubMotor;
 import org.openftc.revextensions2.ExpansionHubServo;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
 @TeleOp(name = "ukdrive")
 public class EllieTeleOpMode extends OpMode {
     ExpansionHubMotor launch1, launch2, intake, wobble;
@@ -55,6 +62,7 @@ public class EllieTeleOpMode extends OpMode {
     double currentThreshold = 3000;
     double intakeNormalSpeed = 0.65;
 
+
     RingLauncher ringLauncher;
     private PowerShotFire powerShotFireState = PowerShotFire.STOPPED;
 
@@ -92,12 +100,13 @@ public class EllieTeleOpMode extends OpMode {
 
     @Override
     public void loop() {
+        /*
         intakeCurrentDraw = intake.getCurrent(CurrentUnit.MILLIAMPS);
         if (intakeCurrentDraw > currentThreshold && intake.getPower() > 0.4 && intake.getPower() < 0.9) {
             intake.setPower(1);
         } else if (intakeCurrentDraw < currentThreshold && intake.getPower() > 0.9) {
             intake.setPower(intakeNormalSpeed);
-        }
+        } */
 
         // Enable and Disable Slowmode
         if (gamepad1.right_stick_button && r3Timer.milliseconds() > 250) {
@@ -130,7 +139,7 @@ public class EllieTeleOpMode extends OpMode {
         }
         lastLeftBumperState = gamepad1.left_bumper;
 
-        /*
+
         if (lastSquareState && !gamepad1.x) {
             if (userFire) {
                 userFire = false;
@@ -138,7 +147,7 @@ public class EllieTeleOpMode extends OpMode {
                 userFire = true;
             }
         }
-        lastSquareState = gamepad1.x; */
+        lastSquareState = gamepad1.x;
 
         // Arm Up and Down
         wobble.setPower((gamepad1.left_trigger - gamepad1.right_trigger) * .5);
@@ -234,27 +243,26 @@ public class EllieTeleOpMode extends OpMode {
         // Enable launcher
         if (gamepad1.y) {
             drive.setMotorPowers(0, 0, 0, 0);
-            ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
-            ringLauncher.launch(3);
-            /*
-            if (userFire) {
-                ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
-                ringLauncher.launch(3);
-            } else {
+            if (!userFire) {
                 Trajectory highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
                         .lineToLinearHeading(new Pose2d(-4, 38, 0))
                         .build();
 
                 drive.followTrajectory(highGoal);
-                ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
-                ringLauncher.launch(3);
-            } */
+            }
+            ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
+            ringLauncher.launch(3);
         }
 
 
         if (gamepad1.dpad_right) {
-            flicker.setPosition(-0.6);
+            flicker.setPosition(0.2);
+            
         }
+        if (gamepad1.square) {
+            flicker.setPosition(0.425);
+        }
+
 
         /*
         // TODO: aim-assist
@@ -263,11 +271,8 @@ public class EllieTeleOpMode extends OpMode {
         } */
 
         telemetry.addData("Wheel multiplier:", wheelMultiplier);
-        telemetry.addData("RPM:", ringLauncher.getRPM());
         telemetry.addData("High Goal RPM", HIGH_GOAL_RPM + userAdjustedRPM);
         telemetry.addData("Power Shot RPM", POWERSHOT_RPM + userAdjustedRPM);
-        telemetry.addData("Timer", servoTimer.milliseconds());
-        telemetry.addData("Servo:", gripper.getPosition());
         telemetry.addData("MANUAL", userFire);
 
         telemetry.update();
@@ -278,5 +283,41 @@ public class EllieTeleOpMode extends OpMode {
         ringLauncher.setTargetRPM(POWERSHOT_RPM);
         ringLauncher.launch(1);
 
+    }
+
+    public Pose2d findClosestPose() {
+        Pose2d[] highGoalPoints = new Pose2d[0];
+        highGoalPoints[0] = new Pose2d(0, 0, 0);
+        highGoalPoints[1] = new Pose2d(5, 5, 5);
+        highGoalPoints[2] = new Pose2d(10, 10, 10);
+
+        List<Pose2d> highGoalSortedList = Arrays.asList(highGoalPoints);
+
+        final Pose2d currentPos = drive.getPoseEstimate();
+
+        Collections.sort(highGoalSortedList, new Comparator<Pose2d>() {
+            @Override
+            public int compare(Pose2d o1, Pose2d o2) {
+                // drive = (30, 30)
+                double distance1 = Math.sqrt(Math.pow((o1.getX() - currentPos.getX()), 2) + Math.pow((o1.getY() - currentPos.getY()), 2));
+                double distance2 = Math.sqrt(Math.pow((o2.getX() - currentPos.getX()), 2) + Math.pow((o2.getY() - currentPos.getY()), 2));
+
+                if (distance1 > distance2) {
+                    return 1;
+                } else if (distance2 > distance1) {
+                    return -1;
+                } else {
+                    return 0;
+                }
+
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                return false;
+            }
+        });
+
+        return highGoalSortedList.get(0);
     }
 }
