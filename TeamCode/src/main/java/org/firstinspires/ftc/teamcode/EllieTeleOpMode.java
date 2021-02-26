@@ -283,25 +283,24 @@ public class EllieTeleOpMode extends OpMode {
     }
 
     public Pose2d findClosestPose() {
-        Pose2d[] highGoalPoints = new Pose2d[2];
+        Pose2d[] highGoalPoints = new Pose2d[3];
         highGoalPoints[0] = new Pose2d(-4, 38, 0);
-        highGoalPoints[1] = new Pose2d(5, 5, 0);
-        highGoalPoints[2] = new Pose2d(10, 10, 0);
+        highGoalPoints[1] = new Pose2d(-30, 10, 0);
+        highGoalPoints[2] = new Pose2d(40, 20, 0);
 
         List<Pose2d> highGoalSortedList = Arrays.asList(highGoalPoints);
 
-        final Pose2d currentPos = drive.getPoseEstimate();
 
         Collections.sort(highGoalSortedList, new Comparator<Pose2d>() {
             @Override
             public int compare(Pose2d o1, Pose2d o2) {
-                double distance1 = Math.sqrt(Math.pow((o1.getX() - currentPos.getX()), 2) + Math.pow((o1.getY() - currentPos.getY()), 2));
-                double distance2 = Math.sqrt(Math.pow((o2.getX() - currentPos.getX()), 2) + Math.pow((o2.getY() - currentPos.getY()), 2));
+                double distance1 = Math.sqrt(Math.pow((o1.getX() - drive.getPoseEstimate().getX()), 2) + Math.pow((o1.getY() - drive.getPoseEstimate().getY()), 2));
+                double distance2 = Math.sqrt(Math.pow((o2.getX() - drive.getPoseEstimate().getX()), 2) + Math.pow((o2.getY() - drive.getPoseEstimate().getY()), 2));
 
-                if (distance1 > distance2) {
-                    return 1;
-                } else if (distance2 > distance1) {
+                if (distance1 < distance2) {
                     return -1;
+                } else if (distance2 < distance1) {
+                    return 1;
                 } else {
                     return 0;
                 }
