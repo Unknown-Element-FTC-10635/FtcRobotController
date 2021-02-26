@@ -61,7 +61,7 @@ public class AutonomousOpMode extends LinearOpMode {
         Pose2d blueStart = new Pose2d(-63, 18, 0);
         Vector2d avoidRingsPoint = new Vector2d(-10, 24);
 
-        final Vector2d square1 = new Vector2d(13, 50);
+        final Vector2d square1 = new Vector2d(8, 48);
         final Vector2d square2 = new Vector2d(33, 23);
         final Vector2d square3 = new Vector2d(58, 45);
 
@@ -113,7 +113,7 @@ public class AutonomousOpMode extends LinearOpMode {
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
                 grabber.setPosition(0);
-                afterRingCount(new Pose2d(30, 20, 0), vectorToPose(square2, 0), 1);
+                afterRingCount(new Pose2d(28, 20, 0), vectorToPose(square2, 0), 1);
                 break;
 
             case 4:
@@ -168,7 +168,7 @@ public class AutonomousOpMode extends LinearOpMode {
                 .strafeRight(5)
                 .build();
         Trajectory getAwayFromSecondWobbleFirstPosition = drive.trajectoryBuilder(dropOffSecondWobble.end())
-                .strafeRight(20)
+                .strafeRight(5)
                 .build();
         Trajectory firingPositionAfterSecondWobble = drive.trajectoryBuilder(getAwayFromSecondWobble.end())
                 .lineToLinearHeading(new Pose2d(-5, 34, 0))
@@ -262,7 +262,9 @@ public class AutonomousOpMode extends LinearOpMode {
                 adjustVoltage();
                 drive.update();
             }
+        }
 
+        if (rings == 4) {
             drive.followTrajectoryAsync(getAwayFromRings);
 
             while (drive.isBusy()) {
