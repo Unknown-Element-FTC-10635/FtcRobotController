@@ -5,17 +5,13 @@ import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.revextensions2.ExpansionHubMotor;
 import org.openftc.revextensions2.ExpansionHubServo;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -69,7 +65,7 @@ public class EllieTeleOpMode extends OpMode {
     @Override
     public void init() {
         drive = new SampleMecanumDrive(hardwareMap);
-        drive.setPoseEstimate(new Pose2d(12, 34, 0));
+        drive.setPoseEstimate(new Pose2d(5, 34, 0));
         //drive.setPoseEstimate(new Pose2d(-63, 18, 0));
 
         ringLauncher = new RingLauncher(hardwareMap);
@@ -128,7 +124,7 @@ public class EllieTeleOpMode extends OpMode {
                 )
         );
         drive.update();
-        
+
         if (lastRightBumperState && !gamepad1.right_bumper) {
             userAdjustedRPM += 10;
         }
@@ -199,7 +195,7 @@ public class EllieTeleOpMode extends OpMode {
 
         // Powershot launcher
         if (gamepad1.a) {
-            drive.setMotorPowers(0, 0, 0,0);
+            drive.setMotorPowers(0, 0, 0, 0);
             if (userFire) {
                 ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
                 ringLauncher.launch(1);
@@ -244,8 +240,9 @@ public class EllieTeleOpMode extends OpMode {
         if (gamepad1.y) {
             drive.setMotorPowers(0, 0, 0, 0);
             if (!userFire) {
+
                 Trajectory highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-4, 38, 0))
+                        .lineToLinearHeading(findClosestPose())
                         .build();
 
                 drive.followTrajectory(highGoal);
@@ -257,7 +254,7 @@ public class EllieTeleOpMode extends OpMode {
 
         if (gamepad1.dpad_right) {
             flicker.setPosition(0.2);
-            
+
         }
         if (gamepad1.square) {
             flicker.setPosition(0.425);
@@ -286,10 +283,10 @@ public class EllieTeleOpMode extends OpMode {
     }
 
     public Pose2d findClosestPose() {
-        Pose2d[] highGoalPoints = new Pose2d[0];
-        highGoalPoints[0] = new Pose2d(0, 0, 0);
-        highGoalPoints[1] = new Pose2d(5, 5, 5);
-        highGoalPoints[2] = new Pose2d(10, 10, 10);
+        Pose2d[] highGoalPoints = new Pose2d[2];
+        highGoalPoints[0] = new Pose2d(-4, 38, 0);
+        highGoalPoints[1] = new Pose2d(5, 5, 0);
+        highGoalPoints[2] = new Pose2d(10, 10, 0);
 
         List<Pose2d> highGoalSortedList = Arrays.asList(highGoalPoints);
 
@@ -298,7 +295,6 @@ public class EllieTeleOpMode extends OpMode {
         Collections.sort(highGoalSortedList, new Comparator<Pose2d>() {
             @Override
             public int compare(Pose2d o1, Pose2d o2) {
-                // drive = (30, 30)
                 double distance1 = Math.sqrt(Math.pow((o1.getX() - currentPos.getX()), 2) + Math.pow((o1.getY() - currentPos.getY()), 2));
                 double distance2 = Math.sqrt(Math.pow((o2.getX() - currentPos.getX()), 2) + Math.pow((o2.getY() - currentPos.getY()), 2));
 
