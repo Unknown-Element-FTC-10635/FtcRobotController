@@ -106,16 +106,19 @@ public class AutonomousOpMode extends LinearOpMode {
         switch (numberOfRings) {
             case 0:
                 drive.followTrajectory(trajectoryToSquare1);
+                grabber.setPosition(0);
                 afterRingCount(new Pose2d(10, 45, 0), vectorToPose(square1, 0), 0);
                 break;
 
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
+                grabber.setPosition(0);
                 afterRingCount(new Pose2d(30, 20, 0), vectorToPose(square2, 0), 1);
                 break;
 
             case 4:
                 drive.followTrajectory(trajectoryToSquare3);
+                grabber.setPosition(0);
                 afterRingCount(new Pose2d(55, 42, 0), vectorToPose(square3, 0), 4);
                 break;
         }
@@ -179,7 +182,6 @@ public class AutonomousOpMode extends LinearOpMode {
 //        wobbleArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         // while (wobbleArm.getCurrentPosition() < ROTATE_OPEN - 20) {}
 
-        grabber.setPosition(0);
         //sleep(100);
 
         wobbleArm.setPower(0.4);
@@ -189,32 +191,35 @@ public class AutonomousOpMode extends LinearOpMode {
             drive.followTrajectory(reverseFromWobbles);
         }
 
-        //drive.followTrajectory(firingPosition);
 
-        /*
-        ringLauncher.setTargetRPM(targetRPM);
-        ringLauncher.launch(3); */
+        if (rings == 4) {
+            drive.followTrajectory(firingPosition);
+            ringLauncher.setTargetRPM(targetRPM);
+            ringLauncher.launch(3);
+        }
 
-        ringLauncher.setTargetRPM(targetRPM);
-        ringLauncher.spinUpFlyWheel();
+        if (rings != 4) {
+            ringLauncher.setTargetRPM(targetRPM);
+            ringLauncher.spinUpFlyWheel();
 
-        drive.followTrajectory(powershot1);
+            drive.followTrajectory(powershot1);
 
-        // ring launcher
-        ringLauncher.setTargetRPM(targetRPM);
-        ringLauncher.launch(1);
+            // ring launcher
+            ringLauncher.setTargetRPM(targetRPM);
+            ringLauncher.launch(1);
 
-        drive.followTrajectory(powershot2);
+            drive.followTrajectory(powershot2);
 
-        // ring launcher
-        ringLauncher.setTargetRPM(targetRPM);
-        ringLauncher.launch(1);
+            // ring launcher
+            ringLauncher.setTargetRPM(targetRPM);
+            ringLauncher.launch(1);
 
-        drive.followTrajectory(powershot3);
+            drive.followTrajectory(powershot3);
 
-        // ring launcher
-        ringLauncher.setTargetRPM(targetRPM);
-        ringLauncher.launch(1);
+            // ring launcher
+            ringLauncher.setTargetRPM(targetRPM);
+            ringLauncher.launch(1);
+        }
 
         wobbleArm.setPower(.35);
         wobbleArm.setTargetPosition(ROTATE_OPEN);
