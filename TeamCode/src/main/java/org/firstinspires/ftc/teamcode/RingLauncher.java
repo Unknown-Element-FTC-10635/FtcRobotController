@@ -78,9 +78,10 @@ public class RingLauncher {
 
     }
 
-    public void spinUpFlyWheel () {
-        launch1.setVelocity(targetVelocity);
-        launch2.setVelocity(targetVelocity);
+    public void spinUpFlyWheel (int velocity) {
+        velocity = (velocity / 90) * 28;
+        launch1.setVelocity(velocity);
+        launch2.setVelocity(velocity);
     }
 
     public void setTargetRPM(int targetRPM) {

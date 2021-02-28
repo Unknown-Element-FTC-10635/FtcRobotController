@@ -30,7 +30,7 @@ public class EllieTeleOpMode extends OpMode {
     private ElapsedTime bTimer = new ElapsedTime();
     private ElapsedTime optionsTimer = new ElapsedTime();
 
-    private final int HIGH_GOAL_RPM = 3600;
+    private final int HIGH_GOAL_RPM = 3650;
     private final int POWERSHOT_RPM = 3400;
 
     int userAdjustedRPM = 0;
@@ -193,6 +193,10 @@ public class EllieTeleOpMode extends OpMode {
             }
         }
 
+        if (gamepad1.share) {
+            drive.setPoseEstimate(new Pose2d(-62, 61, 0));
+        }
+
         // Powershot launcher
         if (gamepad1.a) {
             drive.setMotorPowers(0, 0, 0, 0);
@@ -283,10 +287,12 @@ public class EllieTeleOpMode extends OpMode {
     }
 
     public Pose2d findClosestPose() {
-        Pose2d[] highGoalPoints = new Pose2d[3];
-        highGoalPoints[0] = new Pose2d(-4, 38, 0);
-        highGoalPoints[1] = new Pose2d(-30, 10, 0);
-        highGoalPoints[2] = new Pose2d(40, 20, 0);
+        Pose2d[] highGoalPoints = new Pose2d[]{
+                new Pose2d(-4, 38, 0),
+                new Pose2d(-30, 10, 0),
+                new Pose2d(-6, 7, 0.36855),
+                new Pose2d(-60, 34, 0)
+        };
 
         List<Pose2d> highGoalSortedList = Arrays.asList(highGoalPoints);
 

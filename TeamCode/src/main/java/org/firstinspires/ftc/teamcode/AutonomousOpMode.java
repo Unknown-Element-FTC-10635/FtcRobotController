@@ -75,18 +75,18 @@ public class AutonomousOpMode extends LinearOpMode {
         //wobbleArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         Pose2d blueStart = new Pose2d(-63, 18, 0);
-        Vector2d avoidRingsPoint = new Vector2d(-10, 24);
+        Pose2d avoidRingsPoint = new Pose2d(-10, 24, 0);
 
         final Trajectory trajectoryToSquare1 = drive.trajectoryBuilder(blueStart)
                 .splineTo(SQUARE_1, 0)
                 .build();
         final Trajectory trajectoryToSquare2 = drive.trajectoryBuilder(blueStart)
-                .lineTo(avoidRingsPoint)
+                .lineToLinearHeading(avoidRingsPoint)
                 .splineTo(SQUARE_2, 0)
                 .build();
         final Trajectory trajectoryToSquare3 = drive.trajectoryBuilder(blueStart)
-                .lineTo(avoidRingsPoint)
-                .splineTo(SQUARE_3, 0)
+                .lineToLinearHeading(avoidRingsPoint)
+                .splineToLinearHeading(vectorToPose(SQUARE_3, 0), 0)
                 .build();
 
         drive.setPoseEstimate(blueStart);
@@ -144,8 +144,10 @@ public class AutonomousOpMode extends LinearOpMode {
         //sleep(100);
 
         wobbleArm.setPower(0.4);
-        /*
-        wobbleArm.setTargetPosition(0); */
+
+        if (rings == 4) {
+            wobbleArm.setTargetPosition(500);
+        }
 
         if (rings == 0) {
             drive.followTrajectory(reverseFromWobblesZero);
@@ -153,6 +155,7 @@ public class AutonomousOpMode extends LinearOpMode {
             drive.followTrajectory(reverseFromWobbleOne);
         }
 
+        ringLauncher.spinUpFlyWheel(POWERSHOT_RPM);
 
         if (rings == 4) {
             drive.followTrajectory(firingPositionFour);
@@ -161,9 +164,6 @@ public class AutonomousOpMode extends LinearOpMode {
         }
 
         if (rings != 4) {
-            ringLauncher.setTargetRPM(POWERSHOT_RPM);
-            ringLauncher.spinUpFlyWheel();
-
             if (rings == 0) {
                 drive.followTrajectory(firstPowershotZero);
             } else if (rings == 1) {
@@ -206,8 +206,9 @@ public class AutonomousOpMode extends LinearOpMode {
             //drive.followTrajectory(forward);
 
             ElapsedTime timer = new ElapsedTime();
+
+            drive.setMotorPowers(0.2, 0.2, 0.2, 0.2);
             while(timer.milliseconds() < 250) {
-                drive.setMotorPowers(0.2, 0.2, 0.2, 0.2);
                 drive.update();
             }
             drive.setMotorPowers(0, 0, 0, 0);
@@ -251,8 +252,7 @@ public class AutonomousOpMode extends LinearOpMode {
         wobbleArm.setTargetPosition(0);
 
         if (rings == 1 || rings == 4) {
-            ringLauncher.setTargetRPM(TARGET_RPM);
-            ringLauncher.spinUpFlyWheel();
+            ringLauncher.spinUpFlyWheel(TARGET_RPM);
             drive.followTrajectory(firingPositionAfterSecondWobble);
             ringLauncher.setTargetRPM(TARGET_RPM);
             ringLauncher.launch(3);
@@ -288,17 +288,17 @@ public class AutonomousOpMode extends LinearOpMode {
                 .build();
 
         firstPowershotZero = drive.trajectoryBuilder(reverseFromWobblesZero.end())
-                .lineTo(new Vector2d(-4, 18))
+                .lineToLinearHeading(new Pose2d(-4, 18, 0))
                 .build();
         firstPowershotOne = drive.trajectoryBuilder(reverseFromWobbleOne.end())
-                .lineTo(new Vector2d(-4, 18))
+                .lineToLinearHeading(new Pose2d(-4, 18, 0))
                 .build();
 
         powershot2 = drive.trajectoryBuilder(firstPowershotZero.end())
-                .lineTo(new Vector2d(-4, 10))
+                .lineToLinearHeading(new Pose2d(-4, 10, 0))
                 .build();
         powershot3 = drive.trajectoryBuilder(powershot2.end())
-                .lineTo(new Vector2d(-4, 3))
+                .lineToLinearHeading(new Pose2d(-4, 3, 0 ))
                 .build();
         secondWobble = drive.trajectoryBuilder(powershot3.end(), true)
                 .lineToLinearHeading(new Pose2d(-50, 25, 0))
