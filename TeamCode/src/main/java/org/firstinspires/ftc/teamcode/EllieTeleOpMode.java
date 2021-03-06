@@ -31,7 +31,7 @@ public class EllieTeleOpMode extends OpMode {
     private ElapsedTime optionsTimer = new ElapsedTime();
 
     private final int HIGH_GOAL_RPM = 3650;
-    private final int POWERSHOT_RPM = 3400;
+    private final int POWERSHOT_RPM = 3450;
 
     int userAdjustedRPM = 0;
 
@@ -211,7 +211,7 @@ public class EllieTeleOpMode extends OpMode {
         switch (powerShotFireState) {
             case FIRST_POSITION:
                 Trajectory powershot = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-3, 15, 0))
+                        .lineToLinearHeading(new Pose2d(-4, 18, 0))
                         .build();
 
                 powerShotFire(powershot);
@@ -220,7 +220,7 @@ public class EllieTeleOpMode extends OpMode {
 
             case SECOND_POSITION:
                 Trajectory powershot2 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-3, 9, 0))
+                        .lineToLinearHeading(new Pose2d(-4, 9, 0))
                         .build();
 
                 powerShotFire(powershot2);
@@ -229,7 +229,7 @@ public class EllieTeleOpMode extends OpMode {
 
             case THIRD_POSITION:
                 Trajectory powershot3 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-3, 2, 0))
+                        .lineToLinearHeading(new Pose2d(-4, 2, 0))
                         .build();
 
                 powerShotFire(powershot3);
@@ -289,7 +289,7 @@ public class EllieTeleOpMode extends OpMode {
     public Pose2d findClosestPose() {
         Pose2d[] highGoalPoints = new Pose2d[]{
                 new Pose2d(-4, 38, 0),
-                new Pose2d(-30, 10, 0),
+                new Pose2d(-7, 58, 6.1),
                 new Pose2d(-6, 7, 0.36855),
                 new Pose2d(-60, 34, 0)
         };

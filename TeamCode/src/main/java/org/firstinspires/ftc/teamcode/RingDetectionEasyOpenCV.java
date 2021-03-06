@@ -22,6 +22,7 @@ public class RingDetectionEasyOpenCV {
     private RingDetectionEasyOpenCV.CameraPipeline pipeline;
 
     private final HardwareMap hardwareMap;
+
     private final Telemetry telemetry;
 
     public RingDetectionEasyOpenCV(HardwareMap hardwareMap, Telemetry telemetry) {

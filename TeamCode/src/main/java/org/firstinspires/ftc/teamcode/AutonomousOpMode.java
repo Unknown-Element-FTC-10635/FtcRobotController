@@ -33,7 +33,7 @@ public class AutonomousOpMode extends LinearOpMode {
     final double LEFT_LINKAGE_RAISED = 0.75;
     final double RIGHT_LINKAGE_RAISED = 0.15;
 
-    final int ROTATE_OPEN = 850;
+    final int ROTATE_OPEN = 800;
 
     double intakeCurrentDraw = 0;
     double currentThreshold = 3000;
@@ -41,7 +41,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
     final Vector2d SQUARE_1 = new Vector2d(8, 46);
     final Vector2d SQUARE_2 = new Vector2d(35, 23);
-    final Vector2d SQUARE_3 = new Vector2d(58, 45);
+    final Vector2d SQUARE_3 = new Vector2d(58, 43);
 
     Trajectory reverseFromWobblesZero, reverseFromWobbleOne, firingPositionFour, firstPowershotZero,
             firstPowershotOne, powershot2, powershot3, secondWobble, strefeLeft, forward, back, intakeCollection,
@@ -155,7 +155,7 @@ public class AutonomousOpMode extends LinearOpMode {
             drive.followTrajectory(reverseFromWobbleOne);
         }
 
-        ringLauncher.spinUpFlyWheel(POWERSHOT_RPM);
+        //ringLauncher.spinUpFlyWheel(POWERSHOT_RPM);
 
         if (rings == 4) {
             drive.followTrajectory(firingPositionFour);
@@ -252,7 +252,7 @@ public class AutonomousOpMode extends LinearOpMode {
         wobbleArm.setTargetPosition(0);
 
         if (rings == 1 || rings == 4) {
-            ringLauncher.spinUpFlyWheel(TARGET_RPM);
+            //ringLauncher.spinUpFlyWheel(TARGET_RPM);
             drive.followTrajectory(firingPositionAfterSecondWobble);
             ringLauncher.setTargetRPM(TARGET_RPM);
             ringLauncher.launch(3);
