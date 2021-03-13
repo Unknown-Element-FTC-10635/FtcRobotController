@@ -171,7 +171,7 @@ public class AutonomousOpMode extends LinearOpMode {
             }
 
             // ring launcher
-            ringLauncher.setTargetRPM(POWERSHOT_RPM);
+            ringLauncher.setTargetRPM(POWERSHOT_RPM - 250);  // band-aid fix
             ringLauncher.launch(1);
 
             drive.followTrajectory(powershot2);

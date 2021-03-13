@@ -53,11 +53,13 @@ public class EllieTeleOpMode extends OpMode {
     private boolean lastSquareState = false;
 
     boolean userFire = true;
-
     double intakeCurrentDraw = 0;
     double currentThreshold = 3000;
     double intakeNormalSpeed = 0.65;
 
+    int flickstate = 0;
+    int firstPowershotAdjustment = 0;
+    ElapsedTime FlickTImer = new ElapsedTime();
 
     RingLauncher ringLauncher;
     private PowerShotFire powerShotFireState = PowerShotFire.STOPPED;
@@ -201,7 +203,12 @@ public class EllieTeleOpMode extends OpMode {
         if (gamepad1.a) {
             drive.setMotorPowers(0, 0, 0, 0);
             if (userFire) {
-                ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM);
+                if(launch1.getVelocity() < 500){ // band-aid fix for overshooting the first powershot. Reduces the target rpm if the flywheel is starting from standstill
+                    firstPowershotAdjustment = -250;
+                } else {
+                    firstPowershotAdjustment = 0;
+                }
+                ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM + firstPowershotAdjustment);
                 ringLauncher.launch(1);
             } else {
                 powerShotFireState = PowerShotFire.FIRST_POSITION;
@@ -256,24 +263,35 @@ public class EllieTeleOpMode extends OpMode {
         }
 
 
-        if (gamepad1.dpad_right) {
-            flicker.setPosition(0.2);
-
-        }
-        if (gamepad1.square) {
-            flicker.setPosition(0.425);
-        }
-
-
         /*
         // TODO: aim-assist
         if (gamepad1.y) {
             Point centerOfHighGoal = aimAssist.getCenterOfHighGoal();
         } */
 
+        if (gamepad1.right_bumper) {  // one giant flick to attempt to free stuck rings
+            flickstate = 1;
+        }
+
+        switch (flickstate){
+            case 0:
+                break;
+            case 1:
+                FlickTImer.reset();
+                flicker.setPosition(0.2);
+                flickstate = 2;
+                break;
+            case 2:
+                if (FlickTImer.milliseconds() > 170) { // long enough for it to push a bit but short enough not to get caught in a ring
+                    flicker.setPosition(0.425);
+                    flickstate = 0;
+                }
+                break;
+        }
+
         telemetry.addData("Wheel multiplier:", wheelMultiplier);
         telemetry.addData("High Goal RPM", HIGH_GOAL_RPM + userAdjustedRPM);
-        telemetry.addData("Power Shot RPM", POWERSHOT_RPM + userAdjustedRPM);
+        telemetry.addData("Power Shot RPM", POWERSHOT_RPM + userAdjustedRPM); // doesn't reflect adjustment for the first powershot
         telemetry.addData("MANUAL", userFire);
 
         telemetry.update();
@@ -281,9 +299,13 @@ public class EllieTeleOpMode extends OpMode {
 
     public void powerShotFire(Trajectory trajectory) {
         drive.followTrajectory(trajectory);
-        ringLauncher.setTargetRPM(POWERSHOT_RPM);
+        if(launch1.getVelocity() < 500){ // band-aid fix for overshooting the first powershot. Reduces the target rpm if the flywheel is starting from standstill
+            firstPowershotAdjustment = -250;
+        } else {
+            firstPowershotAdjustment = 0;
+        }
+        ringLauncher.setTargetRPM(POWERSHOT_RPM + firstPowershotAdjustment);
         ringLauncher.launch(1);
-
     }
 
     public Pose2d findClosestPose() {
