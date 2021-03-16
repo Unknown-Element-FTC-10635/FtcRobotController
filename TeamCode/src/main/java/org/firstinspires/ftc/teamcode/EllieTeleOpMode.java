@@ -40,7 +40,7 @@ public class EllieTeleOpMode extends OpMode {
     final double RIGHT_LINKAGE_IN = 0.7084;
     final double RIGHT_LINKAGE_OUT = 0.0449;
     final double GRIPPER_CLOSED = 0.4;
-    final double GRIPPER_OPEN = 0;
+    final double GRIPPER_OPEN = 0.005;
 
     private boolean grabberOpen = false;
     private boolean intakeOff = true;
@@ -56,6 +56,8 @@ public class EllieTeleOpMode extends OpMode {
     double intakeCurrentDraw = 0;
     double currentThreshold = 3000;
     double intakeNormalSpeed = 0.65;
+
+    int psX, psY;
 
     int flickstate = 0;
     int firstPowershotAdjustment = 0;
@@ -211,35 +213,38 @@ public class EllieTeleOpMode extends OpMode {
                 ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM + firstPowershotAdjustment);
                 ringLauncher.launch(1);
             } else {
+                Pose2d poseEstimate = drive.getPoseEstimate();
+                psX = (int) poseEstimate.getX();
+                psY = (int) poseEstimate.getY();
+
                 powerShotFireState = PowerShotFire.FIRST_POSITION;
             }
         }
 
         switch (powerShotFireState) {
             case FIRST_POSITION:
+
                 Trajectory powershot = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-4, 18, 0))
+                        .lineToLinearHeading(new Pose2d(psX, psY, 5.8))
                         .build();
 
-                powerShotFire(powershot);
+                ringLauncher.spinUpFlyWheel(POWERSHOT_RPM);
+                drive.followTrajectory(powershot);
+                powerShotFire();
                 powerShotFireState = PowerShotFire.SECOND_POSITION;
                 break;
 
             case SECOND_POSITION:
-                Trajectory powershot2 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-4, 9, 0))
-                        .build();
-
-                powerShotFire(powershot2);
+                ringLauncher.spinUpFlyWheel(POWERSHOT_RPM);
+                drive.turn(Math.toRadians(7));
+                powerShotFire();
                 powerShotFireState = PowerShotFire.THIRD_POSITION;
                 break;
 
             case THIRD_POSITION:
-                Trajectory powershot3 = drive.trajectoryBuilder(drive.getPoseEstimate())
-                        .lineToLinearHeading(new Pose2d(-4, 2, 0))
-                        .build();
-
-                powerShotFire(powershot3);
+                ringLauncher.spinUpFlyWheel(POWERSHOT_RPM);
+                drive.turn(Math.toRadians(7));
+                powerShotFire();
                 powerShotFireState = PowerShotFire.STOPPED;
                 break;
 
@@ -251,12 +256,22 @@ public class EllieTeleOpMode extends OpMode {
         if (gamepad1.y) {
             drive.setMotorPowers(0, 0, 0, 0);
             if (!userFire) {
+                Pose2d poseEstimate = drive.getPoseEstimate();
+                int x = (int) poseEstimate.getX();
+                int y = (int) poseEstimate.getY();
 
+                Trajectory highGoal = drive.trajectoryBuilder(poseEstimate)
+                        .lineToSplineHeading(new Pose2d(x, y, 0.25))
+                        .build();
+
+                drive.followTrajectory(highGoal);
+
+                /*
                 Trajectory highGoal = drive.trajectoryBuilder(drive.getPoseEstimate())
                         .lineToLinearHeading(findClosestPose())
                         .build();
 
-                drive.followTrajectory(highGoal);
+                drive.followTrajectory(highGoal);*/
             }
             ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
             ringLauncher.launch(3);
@@ -269,7 +284,7 @@ public class EllieTeleOpMode extends OpMode {
             Point centerOfHighGoal = aimAssist.getCenterOfHighGoal();
         } */
 
-        if (gamepad1.right_bumper) {  // one giant flick to attempt to free stuck rings
+        if (gamepad1.dpad_right) {  // one giant flick to attempt to free stuck rings
             flickstate = 1;
         }
 
@@ -297,14 +312,13 @@ public class EllieTeleOpMode extends OpMode {
         telemetry.update();
     }
 
-    public void powerShotFire(Trajectory trajectory) {
-        drive.followTrajectory(trajectory);
-        if(launch1.getVelocity() < 500){ // band-aid fix for overshooting the first powershot. Reduces the target rpm if the flywheel is starting from standstill
+    public void powerShotFire() {
+        /*if(launch1.getVelocity() < 500){ // band-aid fix for overshooting the first powershot. Reduces the target rpm if the flywheel is starting from standstill
             firstPowershotAdjustment = -250;
         } else {
             firstPowershotAdjustment = 0;
-        }
-        ringLauncher.setTargetRPM(POWERSHOT_RPM + firstPowershotAdjustment);
+        }*/
+        ringLauncher.setTargetRPM(POWERSHOT_RPM);
         ringLauncher.launch(1);
     }
 
