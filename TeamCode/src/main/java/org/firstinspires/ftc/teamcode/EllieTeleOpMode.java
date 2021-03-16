@@ -19,7 +19,7 @@ import java.util.List;
 @TeleOp(name = "ukdrive")
 public class EllieTeleOpMode extends OpMode {
     ExpansionHubMotor launch1, launch2, intake, wobble;
-    ExpansionHubServo flicker, leftLinkage, rightLinkage, gripper;
+    ExpansionHubServo flicker, leftLinkage, rightLinkage, gripper, leftEar, rightEar;
 
     private double wheelMultiplier = 1;
 
@@ -29,6 +29,7 @@ public class EllieTeleOpMode extends OpMode {
     private ElapsedTime r3Timer = new ElapsedTime();
     private ElapsedTime bTimer = new ElapsedTime();
     private ElapsedTime optionsTimer = new ElapsedTime();
+    private ElapsedTime driver2a = new ElapsedTime();
 
     private final int HIGH_GOAL_RPM = 3650;
     private final int POWERSHOT_RPM = 3450;
@@ -41,7 +42,12 @@ public class EllieTeleOpMode extends OpMode {
     final double RIGHT_LINKAGE_OUT = 0.0449;
     final double GRIPPER_CLOSED = 0.4;
     final double GRIPPER_OPEN = 0.005;
+    final double LEFT_EAR_OPEN = 0.005;
+    final double LEFT_EAR_CLOSED = 0.4;
+    final double RIGHT_EAR_OPEN = 0.6;
+    final double RIGHT_EAR_CLOSED = 0.005;
 
+    private boolean earsIn = true;
     private boolean grabberOpen = false;
     private boolean intakeOff = true;
     private boolean intakeIn = true;
@@ -51,8 +57,8 @@ public class EllieTeleOpMode extends OpMode {
     private boolean lastRightBumperState = false;
     private boolean lastLeftBumperState = false;
     private boolean lastSquareState = false;
+    private boolean userFire = true;
 
-    boolean userFire = true;
     double intakeCurrentDraw = 0;
     double currentThreshold = 3000;
     double intakeNormalSpeed = 0.65;
@@ -93,6 +99,8 @@ public class EllieTeleOpMode extends OpMode {
         leftLinkage = hardwareMap.get(ExpansionHubServo.class, "leftLinkage");
         rightLinkage = hardwareMap.get(ExpansionHubServo.class, "rightLinkage");
         gripper = hardwareMap.get(ExpansionHubServo.class, "gripper");
+        leftEar = hardwareMap.get(ExpansionHubServo.class, "leftEar");
+        rightEar = hardwareMap.get(ExpansionHubServo.class, "rightEar");
 
         telemetry.addLine("Init Complete");
         telemetry.update();
@@ -302,6 +310,20 @@ public class EllieTeleOpMode extends OpMode {
                     flickstate = 0;
                 }
                 break;
+        }
+
+        if (gamepad2.a && driver2a.milliseconds() > 250) {
+            if (earsIn) {
+                leftEar.setPosition(LEFT_EAR_OPEN);
+                rightEar.setPosition(RIGHT_EAR_OPEN);
+                earsIn = false;
+                driver2a.reset();
+            } else {
+                leftEar.setPosition(LEFT_EAR_CLOSED);
+                rightEar.setPosition(RIGHT_EAR_CLOSED);
+                earsIn = true;
+                driver2a.reset();
+            }
         }
 
         telemetry.addData("Wheel multiplier:", wheelMultiplier);
