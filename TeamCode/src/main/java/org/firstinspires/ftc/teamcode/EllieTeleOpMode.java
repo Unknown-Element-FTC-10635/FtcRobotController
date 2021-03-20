@@ -32,8 +32,8 @@ public class EllieTeleOpMode extends OpMode {
     private boolean previousGP2Astate = false;
     private boolean previousdpadRightstate = false;
 
-    private final int HIGH_GOAL_RPM = 3650;
-    private final int POWERSHOT_RPM = 3450;
+    private final int HIGH_GOAL_RPM = 3560;
+    private final int POWERSHOT_RPM = 3360;
 
     int userAdjustedRPM = 0;
 

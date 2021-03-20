@@ -25,8 +25,8 @@ public class AutonomousOpMode extends LinearOpMode {
 
     RingLauncher ringLauncher;
 
-    private final int TARGET_RPM = 3650;
-    private final int POWERSHOT_RPM = 3450;
+    private final int TARGET_RPM = 3560;
+    private final int POWERSHOT_RPM = 3360;
 
     final double LEFT_LINKAGE_OUT = 0.9064;
     final double RIGHT_LINKAGE_OUT = 0.0449;
