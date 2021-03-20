@@ -235,7 +235,7 @@ public class EllieTeleOpMode extends OpMode {
                     firstPowershotAdjustment = 0;
                 }
                 ringLauncher.setTargetRPM(POWERSHOT_RPM + userAdjustedRPM + firstPowershotAdjustment);
-                ringLauncher.launch(1);
+                ringLauncher.launchHandler(1);
             } else {
                 Pose2d poseEstimate = drive.getPoseEstimate();
                 psX = (int) poseEstimate.getX();
@@ -298,9 +298,13 @@ public class EllieTeleOpMode extends OpMode {
                 drive.followTrajectory(highGoal);*/
             }
             ringLauncher.setTargetRPM(HIGH_GOAL_RPM + userAdjustedRPM);
-            ringLauncher.launch(3);
+
+            ringLauncher.launchRings();
         }
 
+        if (ringLauncher.ringsLaunching()) {
+            ringLauncher.launchHandler(3);
+        }
 
         /*
         // TODO: aim-assist
@@ -366,7 +370,7 @@ public class EllieTeleOpMode extends OpMode {
             firstPowershotAdjustment = 0;
         }*/
         ringLauncher.setTargetRPM(POWERSHOT_RPM);
-        ringLauncher.launch(1);
+        ringLauncher.launchHandler(1);
     }
 
     public Pose2d findClosestPose() {

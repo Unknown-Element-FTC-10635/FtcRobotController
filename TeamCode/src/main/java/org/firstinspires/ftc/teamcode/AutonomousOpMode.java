@@ -181,7 +181,10 @@ public class AutonomousOpMode extends LinearOpMode {
         if (rings == 4) {
             drive.followTrajectory(firingPositionFour);
             ringLauncher.setTargetRPM(TARGET_RPM);
-            ringLauncher.launch(3);
+            ringLauncher.launchRings();
+            while (ringLauncher.ringsLaunching()) {
+                ringLauncher.launchHandler(3);
+            }
         }
 
         if (rings != 4) {
@@ -193,19 +196,19 @@ public class AutonomousOpMode extends LinearOpMode {
 
             // ring launcher
             ringLauncher.setTargetRPM(POWERSHOT_RPM - 250);  // band-aid fix
-            ringLauncher.launch(1);
+            ringLauncher.launchHandler(1);
 
             drive.followTrajectory(powershot2);
 
             // ring launcher
             ringLauncher.setTargetRPM(POWERSHOT_RPM);
-            ringLauncher.launch(1);
+            ringLauncher.launchHandler(1);
 
             drive.followTrajectory(powershot3);
 
             // ring launcher
             ringLauncher.setTargetRPM(POWERSHOT_RPM);
-            ringLauncher.launch(1);
+            ringLauncher.launchHandler(1);
         }
 
         wobbleArm.setPower(.35);
@@ -276,7 +279,10 @@ public class AutonomousOpMode extends LinearOpMode {
             //ringLauncher.spinUpFlyWheel(TARGET_RPM);
             drive.followTrajectory(firingPositionAfterSecondWobble);
             ringLauncher.setTargetRPM(TARGET_RPM);
-            ringLauncher.launch(3);
+            ringLauncher.launchRings();
+            while (ringLauncher.ringsLaunching()) {
+                ringLauncher.launchHandler(3);
+            }
         }
 
         drive.followTrajectory(parkOnLine);
