@@ -14,12 +14,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 import org.openftc.revextensions2.ExpansionHubMotor;
+import org.openftc.revextensions2.ExpansionHubServo;
 
 @Config
 @Autonomous(group = "ukdrive")
 public class AutonomousOpMode extends LinearOpMode {
     ExpansionHubMotor wobbleArm, intake;
-    Servo grabber, leftLinkage, rightLinkage;
+    Servo grabber, leftLinkage, rightLinkage, leftEar, rightEar;
     SampleMecanumDrive drive;
 
     RingLauncher ringLauncher;
@@ -32,6 +33,12 @@ public class AutonomousOpMode extends LinearOpMode {
 
     final double LEFT_LINKAGE_RAISED = 0.75;
     final double RIGHT_LINKAGE_RAISED = 0.15;
+
+    final double LEFT_EAR_IN = 0.285;
+    final double RIGHT_EAR_IN = 0.65;
+
+    final double GRIPPER_CLOSED = 0.72;
+    final double GRIPPER_OPEN = 0.36;
 
     final int ROTATE_OPEN = 800;
 
@@ -69,6 +76,9 @@ public class AutonomousOpMode extends LinearOpMode {
         leftLinkage = hardwareMap.get(Servo.class, "leftLinkage");
         rightLinkage = hardwareMap.get(Servo.class, "rightLinkage");
 
+        leftEar = hardwareMap.get(ExpansionHubServo.class, "leftEar");
+        rightEar = hardwareMap.get(ExpansionHubServo.class, "rightEar");
+
         wobbleArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         //wobbleArm.setPower(0);
@@ -94,9 +104,20 @@ public class AutonomousOpMode extends LinearOpMode {
         telemetry.addLine("Waiting for start");
         telemetry.update();
 
-        waitForStart();
+//        waitForStart();
+        while(!isStarted()) {
+            telemetry.addData("ring count", ringCount.getRingCount());
+            telemetry.update();
+            sleep(500);
+            if(isStopRequested())
+                return;
+        }
 
-        grabber.setPosition(0.4);
+
+
+        grabber.setPosition(GRIPPER_CLOSED);
+        leftEar.setPosition(LEFT_EAR_IN);
+        rightEar.setPosition(RIGHT_EAR_IN);
 
         while (opModeIsActive() && ringCount.getFrameCount() < 60) {
             sleep(100);
@@ -114,19 +135,19 @@ public class AutonomousOpMode extends LinearOpMode {
         switch (numberOfRings) {
             case 0:
                 drive.followTrajectory(trajectoryToSquare1);
-                grabber.setPosition(0);
+                grabber.setPosition(GRIPPER_OPEN);
                 afterRingCount(0);
                 break;
 
             case 1:
                 drive.followTrajectory(trajectoryToSquare2);
-                grabber.setPosition(0);
+                grabber.setPosition(GRIPPER_OPEN);
                 afterRingCount(1);
                 break;
 
             case 4:
                 drive.followTrajectory(trajectoryToSquare3);
-                grabber.setPosition(0);
+                grabber.setPosition(GRIPPER_OPEN);
                 afterRingCount(4);
                 break;
         }
@@ -195,7 +216,7 @@ public class AutonomousOpMode extends LinearOpMode {
 
         drive.followTrajectory(strefeLeft);
 
-        grabber.setPosition(.4);
+        grabber.setPosition(GRIPPER_CLOSED);
 
         sleep(250);
 
@@ -235,7 +256,7 @@ public class AutonomousOpMode extends LinearOpMode {
             drive.followTrajectory(dropOffSecondWobbleZero);
         }
 
-        grabber.setPosition(0);
+        grabber.setPosition(GRIPPER_OPEN);
 
         sleep(200);
 

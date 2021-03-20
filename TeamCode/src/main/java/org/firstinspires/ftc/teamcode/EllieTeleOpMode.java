@@ -26,10 +26,11 @@ public class EllieTeleOpMode extends OpMode {
     // private AimAssistPipeline aimAssist;
     SampleMecanumDrive drive;
 
-    private ElapsedTime r3Timer = new ElapsedTime();
-    private ElapsedTime bTimer = new ElapsedTime();
-    private ElapsedTime optionsTimer = new ElapsedTime();
-    private ElapsedTime driver2a = new ElapsedTime();
+    private boolean previousBstate = false;
+    private boolean previousR3state = false;
+    private boolean previousOptionsstate = false;
+    private boolean previousGP2Astate = false;
+    private boolean previousdpadRightstate = false;
 
     private final int HIGH_GOAL_RPM = 3650;
     private final int POWERSHOT_RPM = 3450;
@@ -40,34 +41,35 @@ public class EllieTeleOpMode extends OpMode {
     final double LEFT_LINKAGE_OUT = 0.9064;
     final double RIGHT_LINKAGE_IN = 0.7084;
     final double RIGHT_LINKAGE_OUT = 0.0449;
-    final double GRIPPER_CLOSED = 0.4;
-    final double GRIPPER_OPEN = 0.005;
-    final double LEFT_EAR_OPEN = 0.005;
-    final double LEFT_EAR_CLOSED = 0.4;
-    final double RIGHT_EAR_OPEN = 0.6;
-    final double RIGHT_EAR_CLOSED = 0.005;
+    final double GRIPPER_CLOSED = 0.72;
+    final double GRIPPER_OPEN = 0.36;
+    
+    final double LEFT_EAR_OUT = 0.66;
+    final double LEFT_EAR_IN = 0.285;
+    final double RIGHT_EAR_OUT = 0.30;
+    final double RIGHT_EAR_IN = 0.65;
 
     private boolean earsIn = true;
     private boolean grabberOpen = false;
     private boolean intakeOff = true;
     private boolean intakeIn = true;
 
-    ElapsedTime servoTimer = new ElapsedTime();
+//    ElapsedTime servoTimer = new ElapsedTime();
 
     private boolean lastRightBumperState = false;
     private boolean lastLeftBumperState = false;
     private boolean lastSquareState = false;
     private boolean userFire = true;
 
-    double intakeCurrentDraw = 0;
-    double currentThreshold = 3000;
-    double intakeNormalSpeed = 0.65;
+//    double intakeCurrentDraw = 0;
+//    double currentThreshold = 3000;
+//    double intakeNormalSpeed = 0.65;
 
     int psX, psY;
 
     int flickstate = 0;
     int firstPowershotAdjustment = 0;
-    ElapsedTime FlickTImer = new ElapsedTime();
+    ElapsedTime FlickTimer = new ElapsedTime();
 
     RingLauncher ringLauncher;
     private PowerShotFire powerShotFireState = PowerShotFire.STOPPED;
@@ -102,6 +104,9 @@ public class EllieTeleOpMode extends OpMode {
         leftEar = hardwareMap.get(ExpansionHubServo.class, "leftEar");
         rightEar = hardwareMap.get(ExpansionHubServo.class, "rightEar");
 
+        leftEar.setPosition(LEFT_EAR_IN);
+        rightEar.setPosition(RIGHT_EAR_IN);
+
         telemetry.addLine("Init Complete");
         telemetry.update();
     }
@@ -117,14 +122,17 @@ public class EllieTeleOpMode extends OpMode {
         } */
 
         // Enable and Disable Slowmode
-        if (gamepad1.right_stick_button && r3Timer.milliseconds() > 250) {
-            if (wheelMultiplier == 1) {
-                wheelMultiplier = 0.25;
-            } else {
-                wheelMultiplier = 1;
+        if (gamepad1.right_stick_button) {
+            if (!previousR3state) {
+                previousR3state = true;
+                if (wheelMultiplier == 1) {
+                    wheelMultiplier = 0.25;
+                } else {
+                    wheelMultiplier = 1;
+                }
             }
-
-            r3Timer.reset();
+        } else {
+            previousR3state = false;
         }
 
         // Movement
@@ -161,15 +169,19 @@ public class EllieTeleOpMode extends OpMode {
         wobble.setPower((gamepad1.left_trigger - gamepad1.right_trigger) * .5);
 
         // Grabber
-        if (gamepad1.b && bTimer.milliseconds() > 250) {
-            bTimer.reset();
-            if (grabberOpen) {
-                gripper.setPosition(GRIPPER_CLOSED);
-                grabberOpen = false;
-            } else {
-                gripper.setPosition(GRIPPER_OPEN);
-                grabberOpen = true;
+        if (gamepad1.b) {
+            if (!previousBstate) {
+                previousBstate = true;
+                if (grabberOpen) {
+                    gripper.setPosition(GRIPPER_CLOSED);
+                    grabberOpen = false;
+                } else {
+                    gripper.setPosition(GRIPPER_OPEN);
+                    grabberOpen = true;
+                }
             }
+        } else {
+            previousBstate = false;
         }
 
         // Intake Direction
@@ -192,17 +204,21 @@ public class EllieTeleOpMode extends OpMode {
         }
 
         // Open close intake
-        if (gamepad1.options && optionsTimer.milliseconds() > 250) {
-            optionsTimer.reset();
-            if (intakeIn) {
-                leftLinkage.setPosition(LEFT_LINKAGE_OUT);
-                rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
-                intakeIn = false;
-            } else {
-                leftLinkage.setPosition(LEFT_LINKAGE_IN);
-                rightLinkage.setPosition(RIGHT_LINKAGE_IN);
-                intakeIn = true;
+        if (gamepad1.options) {
+            if (!previousOptionsstate) {
+                previousOptionsstate = true;
+                if (intakeIn) {
+                    leftLinkage.setPosition(LEFT_LINKAGE_OUT);
+                    rightLinkage.setPosition(RIGHT_LINKAGE_OUT);
+                    intakeIn = false;
+                } else {
+                    leftLinkage.setPosition(LEFT_LINKAGE_IN);
+                    rightLinkage.setPosition(RIGHT_LINKAGE_IN);
+                    intakeIn = true;
+                }
             }
+        } else {
+            previousOptionsstate = false;
         }
 
         if (gamepad1.share) {
@@ -292,38 +308,47 @@ public class EllieTeleOpMode extends OpMode {
             Point centerOfHighGoal = aimAssist.getCenterOfHighGoal();
         } */
 
-        if (gamepad1.dpad_right) {  // one giant flick to attempt to free stuck rings
-            flickstate = 1;
+        if (gamepad1.dpad_right) { // one giant flick to attempt to free stuck rings
+            if(!previousdpadRightstate){ // now debounced because its more effective as an impulse rather than a constant force.
+                previousdpadRightstate = true;
+                flickstate = 1;
+            }
+
+        } else {
+            previousdpadRightstate = false;
         }
 
         switch (flickstate){
             case 0:
                 break;
             case 1:
-                FlickTImer.reset();
+                FlickTimer.reset();
                 flicker.setPosition(0.2);
                 flickstate = 2;
                 break;
             case 2:
-                if (FlickTImer.milliseconds() > 170) { // long enough for it to push a bit but short enough not to get caught in a ring
+                if (FlickTimer.milliseconds() > 190) { // long enough for it to push a bit but short enough not to get caught in a ring
                     flicker.setPosition(0.425);
                     flickstate = 0;
                 }
                 break;
         }
 
-        if (gamepad2.a && driver2a.milliseconds() > 250) {
-            if (earsIn) {
-                leftEar.setPosition(LEFT_EAR_OPEN);
-                rightEar.setPosition(RIGHT_EAR_OPEN);
-                earsIn = false;
-                driver2a.reset();
-            } else {
-                leftEar.setPosition(LEFT_EAR_CLOSED);
-                rightEar.setPosition(RIGHT_EAR_CLOSED);
-                earsIn = true;
-                driver2a.reset();
+        if (gamepad2.a) {
+            if(!previousGP2Astate) {
+                previousGP2Astate = true;
+                if (earsIn) {
+                    leftEar.setPosition(LEFT_EAR_OUT);
+                    rightEar.setPosition(RIGHT_EAR_OUT);
+                    earsIn = false;
+                } else {
+                    leftEar.setPosition(LEFT_EAR_IN);
+                    rightEar.setPosition(RIGHT_EAR_IN);
+                    earsIn = true;
+                }
             }
+        } else {
+            previousGP2Astate = false;
         }
 
         telemetry.addData("Wheel multiplier:", wheelMultiplier);

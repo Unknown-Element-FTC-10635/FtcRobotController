@@ -41,7 +41,7 @@ public class DriveConstants {
      * MOTOR_VELO_PID with the tuned coefficients from DriveVelocityPIDTuner.
      */
     public static final boolean RUN_USING_ENCODER = false;
-    public static double KF = 0;
+    public static double KF = 13.2;//for strafe: 16.627092;
     public static final PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(16, 0, 1, KF);
     //public static final PIDFCoefficients MOTOR_VELO_PID = new PIDFCoefficients(0, 0, 0, getMotorVelocityF(MAX_RPM / 60 * TICKS_PER_REV));
 
@@ -64,9 +64,9 @@ public class DriveConstants {
      * motor encoders or have elected not to use them for velocity control, these values should be
      * empirically tuned.
      */
-    public static double kV = 1.13 / rpmToVelocity(getMaxRpm());
-    public static double kA = 0.003;
-    public static double kStatic = 0;
+    public static double kV = 0.01752;
+    public static double kA = 0.00011;
+    public static double kStatic = 0.07366;
 
     /*
      * These values are used to generate the trajectories for you robot. To ensure proper operation,
@@ -77,7 +77,7 @@ public class DriveConstants {
      * forces acceleration-limited profiling).
      */
 
-    public static double MAX_VEL = 40;
+    public static double MAX_VEL = 40;//42 max strafe
     public static double MAX_ACCEL = 30;
     public static double MAX_ANG_VEL = 4.16785557651;
     public static double MAX_ANG_ACCEL = 1;
